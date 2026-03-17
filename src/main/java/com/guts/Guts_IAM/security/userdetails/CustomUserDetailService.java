@@ -1,0 +1,39 @@
+package com.guts.Guts_IAM.security.userdetails;
+
+import com.guts.Guts_IAM.model.User;
+import com.guts.Guts_IAM.repo.user.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+@Service
+public class CustomUserDetailService implements UserDetailsService {
+
+
+    @Autowired
+    UserRepository userRepository;
+
+    @Override
+    public UserDetails loadUserByUsername(String userMail) throws UsernameNotFoundException{
+        User user=userRepository.findByUserMailAndActiveTrue(userMail).orElseThrow(()->
+                new UsernameNotFoundException("User Not Found with this email"+userMail));
+
+
+        if(user!=null){
+            return new CustomUserDetails(
+                    user,
+                    user.getUserMail(),
+                    user.getUserPassword(),
+                    user.isActive(),
+                    user.getUserRoles()
+                            .stream()
+                            .map(role->new SimpleGrantedAuthority(role.name()))
+                            .toList()
+                    );
+        }
+        throw new UsernameNotFoundException("User not Found with email: "+userMail);
+    }
+}

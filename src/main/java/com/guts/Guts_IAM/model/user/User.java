@@ -1,8 +1,8 @@
-package com.guts.Guts_IAM.model;
+package com.guts.Guts_IAM.model.user;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.guts.Guts_IAM.Roles;
+import com.guts.Guts_IAM.enums.Roles;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;

@@ -1,21 +1,29 @@
 package com.guts.Guts_IAM.service.authservice;
 
-import com.guts.Guts_IAM.model.RefreshToken;
-import com.guts.Guts_IAM.model.User;
-import com.guts.Guts_IAM.repo.refreshtoken.RefreshTokenRepository;
-import com.guts.Guts_IAM.repo.user.UserRepository;
+import com.guts.Guts_IAM.enums.Roles;
+import com.guts.Guts_IAM.exceptionhandling.exceptions.ResourceNotFoundException;
+import com.guts.Guts_IAM.model.TokenAudit;
+import com.guts.Guts_IAM.model.audits.AuditLog;
+import com.guts.Guts_IAM.model.refreshtoken.RefreshToken;
+import com.guts.Guts_IAM.model.user.User;
+import com.guts.Guts_IAM.repo.auditrepo.AuditRepository;
+import com.guts.Guts_IAM.repo.auditrepo.TokenAuditRepository;
+import com.guts.Guts_IAM.repo.refreshtokenrepo.RefreshTokenRepository;
+import com.guts.Guts_IAM.repo.userrepo.UserRepository;
 import com.guts.Guts_IAM.security.jwt.jwtutils.JwtUtils;
 import com.guts.Guts_IAM.security.signup.JwtResponse;
 import com.guts.Guts_IAM.security.signup.LoginDto;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -27,7 +35,8 @@ public class AuthService {
     private final JwtUtils jwtUtils;
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final TokenAuditRepository tokenAuditRepository;
+    private final AuditRepository auditRepo;
 
     public JwtResponse login(LoginDto loginDto) {
         authManager.authenticate(
@@ -42,10 +51,20 @@ public class AuthService {
 
         String accessToken = jwtUtils.generateAccessToken(user);
         RefreshToken refreshToken = createRefreshToken(user);
+        TokenAudit tokenAudit=new TokenAudit();
+        tokenAudit.setAccessToken(accessToken);
+        tokenAudit.setAction("Token is generated for "+user.getUserMail());
+        tokenAudit.setTokenOwner(user.getUserMail());
+        tokenAuditRepository.save(tokenAudit);
 
-
+        AuditLog auditLog=new AuditLog();
+        auditLog.setLogAction(user.getUserMail()+" logged In");
+        auditLog.setUserMail(user.getUserMail());
+        auditLog.setUserRoles(user.getUserRoles());
+        auditRepo.save(auditLog);
         return new JwtResponse(accessToken, refreshToken.getToken(), "Bearer");
     }
+
 
     public RefreshToken createRefreshToken(User user) {
         RefreshToken token = new RefreshToken();
@@ -69,6 +88,32 @@ public class AuthService {
     }
 
     public void logout(String refreshTokenStr) {
+        Optional<RefreshToken>  refreshTokenCheck=refreshTokenRepository.findByToken(refreshTokenStr);
+
+        if(refreshTokenCheck.isEmpty()){
+            throw new ResourceNotFoundException(
+                    "Refresh Token Not Found",
+                    "RESOURCE_NOT_FOUND",
+                    HttpStatus.NOT_FOUND
+            );
+        }
+
+        AuditLog auditLog=new AuditLog();
+        String userMail=refreshTokenCheck
+                .get()
+                .getUser()
+                .getUserMail();
+
+        Set<Roles> rolesSet=refreshTokenCheck
+                .get()
+                .getUser()
+                .getUserRoles();
+
+        auditLog.setUserRoles(rolesSet);
+        auditLog.setLogAction(userMail+" Logged Out");
+        auditLog.setUserMail(userMail);
+
+        auditRepo.save(auditLog);
         refreshTokenRepository.deleteByToken(refreshTokenStr);
     }
 }

@@ -1,7 +1,7 @@
 package com.guts.Guts_IAM.security.jwt.jwtutils;
 
 
-import com.guts.Guts_IAM.model.User;
+import com.guts.Guts_IAM.model.user.User;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;

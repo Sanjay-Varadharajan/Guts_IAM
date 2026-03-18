@@ -1,4 +1,4 @@
-package com.guts.Guts_IAM.controller.signup;
+package com.guts.Guts_IAM.controller.auth;
 
 
 import com.guts.Guts_IAM.security.signup.LoginDto;
@@ -32,6 +32,7 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(@RequestBody TokenRefreshRequest request) {
+
         return ResponseEntity.ok(authService.refreshAccessToken(request.getRefreshToken()));
     }
 

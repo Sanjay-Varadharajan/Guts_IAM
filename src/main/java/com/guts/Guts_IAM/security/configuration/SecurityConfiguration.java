@@ -1,4 +1,4 @@
-package com.guts.Guts_IAM.security.security;
+package com.guts.Guts_IAM.security.configuration;
 
 import com.guts.Guts_IAM.security.jwt.jwtfilter.JwtAuthenticationFilter;
 import com.guts.Guts_IAM.security.userdetails.CustomUserDetailService;

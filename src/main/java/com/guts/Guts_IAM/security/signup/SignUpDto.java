@@ -1,13 +1,12 @@
 package com.guts.Guts_IAM.security.signup;
 
 
-import com.guts.Guts_IAM.model.User;
+import com.guts.Guts_IAM.model.user.User;
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.http.HttpStatusCode;
 
 @Data
 @AllArgsConstructor

@@ -1,5 +1,6 @@
-package com.guts.Guts_IAM.model;
+package com.guts.Guts_IAM.model.refreshtoken;
 
+import com.guts.Guts_IAM.model.user.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

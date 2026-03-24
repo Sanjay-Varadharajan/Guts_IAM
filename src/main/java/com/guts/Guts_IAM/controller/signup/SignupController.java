@@ -3,6 +3,7 @@ package com.guts.Guts_IAM.controller.signup;
 import com.guts.Guts_IAM.exceptionhandling.apiresponse.ApiResponse;
 import com.guts.Guts_IAM.security.signup.SignUpDto;
 import com.guts.Guts_IAM.service.signupservice.SignupService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,8 +24,8 @@ public class SignupController {
 
 
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponse> signup(@Valid @RequestBody SignUpDto signUpDto){
-        SignUpDto response=signupService.signup(signUpDto);
+    public ResponseEntity<ApiResponse> signup(@Valid @RequestBody SignUpDto signUpDto, HttpServletRequest httpServletRequest){
+        SignUpDto response=signupService.signup(signUpDto,httpServletRequest);
 
         ApiResponse apiResponse=new ApiResponse(
                 true,

@@ -1,5 +1,6 @@
 package com.guts.Guts_IAM.security.jwt.jwtfilter;
 
+import com.guts.Guts_IAM.exceptionhandling.exceptions.UnauthorizedException;
 import com.guts.Guts_IAM.security.jwt.jwtutils.JwtUtils;
 import com.guts.Guts_IAM.security.userdetails.CustomUserDetailService;
 import com.guts.Guts_IAM.security.userdetails.CustomUserDetails;
@@ -40,30 +41,36 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             token=authHeader.substring(7).trim();
 
             try {
-                if(jwtUtils.validateToken(token)){
-                    Integer userId=jwtUtils.getUserIdFromToken(token);
-
-                    List<String> roles=jwtUtils.getRolesFromToken(token);
-
-                    List<SimpleGrantedAuthority> authorities=roles.stream()
-                            .map(SimpleGrantedAuthority::new)
-                            .collect(Collectors.toList());
+                if (jwtUtils.validateToken(token)) {
+                    String userName = jwtUtils.getUsernameFromToken(token);
+                    CustomUserDetails userDetails =
+                            (CustomUserDetails) customUserDetailService.loadUserByUsername(userName);
 
 
-                    UsernamePasswordAuthenticationToken authenticationToken=
+                    UsernamePasswordAuthenticationToken authenticationToken =
                             new UsernamePasswordAuthenticationToken(
-                                    userId, //principal
+                                    userDetails, //principal
                                     null,  //we dont save credentials here
-                                    authorities
+                                    userDetails.getAuthorities()
                             );
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                 }
             }
-            catch (Exception e){
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED,"Invalid or Expired Token");
-                return;
+
+            catch (io.jsonwebtoken.ExpiredJwtException e) {
+                throw new UnauthorizedException("JWT token expired");
+            } catch (io.jsonwebtoken.JwtException e) {
+                throw new UnauthorizedException("JWT token invalid");
+            } catch (Exception e) {
+                throw new UnauthorizedException("Authentication failed: " + e.getMessage());
             }
         }
         filterChain.doFilter(request,response);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getServletPath();
+        return path.equals("/api/auth/login") || path.equals("/api/auth/refresh");
     }
 }

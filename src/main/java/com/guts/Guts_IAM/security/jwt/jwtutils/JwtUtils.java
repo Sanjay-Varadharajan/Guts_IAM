@@ -26,16 +26,17 @@ public class JwtUtils {
 
     public String generateAccessToken(User user) {
         return Jwts.builder()
-                .setSubject(user.getUserId().toString())
-                .claim("roles", user.getUserRoles().stream().map(Enum::name).toList())
-                .setIssuedAt(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRY))
+                .setSubject(user.getUserMail())
+                .claim("roles", user.getRoles().stream().map(role->role.getName()).toList())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis()+ACCESS_TOKEN_EXPIRY))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
         public String generateRefreshToken(User user){
             return Jwts.builder()
-                    .setSubject(user.getUserId().toString())
+                    .setSubject(user.getUserMail())
                     .setIssuedAt(new Date())
                     .setExpiration(new Date(System.currentTimeMillis()+REFRESH_TOKEN_EXPIRY))
                     .signWith(key,SignatureAlgorithm.HS256)
@@ -47,6 +48,14 @@ public class JwtUtils {
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject());
+    }
+    public String getUsernameFromToken(String token){
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();
     }
 
     public List<String> getRolesFromToken(String token){

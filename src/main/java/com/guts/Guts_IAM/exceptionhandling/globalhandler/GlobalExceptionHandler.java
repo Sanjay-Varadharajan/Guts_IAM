@@ -83,25 +83,23 @@
             }
 
             @ExceptionHandler(UnauthorizedException.class)
-            public ResponseEntity<ApiErrorResponse> handleUnauthorizedException(UnauthorizedException unauthorizedException,
-                                                                                HttpServletRequest httpServletRequest) {
+            public ResponseEntity<ApiErrorResponse> handleUnauthorizedException(UnauthorizedException ex,
+                                                                                HttpServletRequest request) {
 
-                Map<String, String> exceptionBody = new HashMap<>();
+                Map<String,String> exceptionBody = new HashMap<>();
+                exceptionBody.put("Exception", "Unauthorized Access");
 
-                exceptionBody.put("Exception", "User Unauthorized");
-
-                ApiErrorResponse unauthorized = new ApiErrorResponse(
-                        "You are Unauthorized to perform this action",
+                ApiErrorResponse response = new ApiErrorResponse(
+                        ex.getMessage(),
                         HttpStatus.UNAUTHORIZED,
                         "ACCESS_UNAUTHORIZED",
                         exceptionBody,
                         LocalDateTime.now(),
-                        httpServletRequest.getRequestURI()
+                        request.getRequestURI()
                 );
 
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(unauthorized);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
-
             @ExceptionHandler(ConflictException.class)
             public ResponseEntity<ApiErrorResponse> handleConflictException(ConflictException conflictException,
                                                                             HttpServletRequest httpServletRequest) {
@@ -121,6 +119,7 @@
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(apiErrorResponse);
             }
 
+            @ExceptionHandler(ForbiddenException.class)
             public ResponseEntity<ApiErrorResponse> handleForbiddenException(ForbiddenException forbiddenException,
                                                                              HttpServletRequest httpServletRequest){
 
@@ -138,5 +137,24 @@
                 );
 
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(apiErrorResponse);
+            }
+
+            @ExceptionHandler(Exception.class)
+            public ResponseEntity<ApiErrorResponse> handleAllOtherExceptions(Exception ex,
+                                                                             HttpServletRequest request) {
+
+                Map<String,String> exceptionBody = new HashMap<>();
+                exceptionBody.put("Exception", ex.getClass().getSimpleName());
+
+                ApiErrorResponse response = new ApiErrorResponse(
+                        ex.getMessage(),
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "INTERNAL_SERVER_ERROR",
+                        exceptionBody,
+                        LocalDateTime.now(),
+                        request.getRequestURI()
+                );
+
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
             }
         }

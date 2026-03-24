@@ -27,7 +27,6 @@ public class SecurityConfiguration {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception{
         return
@@ -37,6 +36,7 @@ public class SecurityConfiguration {
                         .sessionManagement(sessionManagement->sessionManagement
                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                         )
+
                         .authorizeHttpRequests(authorize->
                                 authorize.requestMatchers("/api/auth/*").permitAll()
                                         .requestMatchers("/api/manager").hasRole("MANAGER")
@@ -45,6 +45,7 @@ public class SecurityConfiguration {
                                         .requestMatchers("/api/guest").hasRole("GUEST")
                                         .requestMatchers("/api/auditor").hasRole("AUDITOR")
                                         .anyRequest().authenticated())
+
                         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                         .exceptionHandling(exceptionHandling->exceptionHandling
                                 .authenticationEntryPoint((request, response, authException) ->
@@ -70,12 +71,10 @@ public class SecurityConfiguration {
         return daoAuthenticationProvider;
     }
 
-
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration){
         return authenticationConfiguration.getAuthenticationManager();
     }
-
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder(){

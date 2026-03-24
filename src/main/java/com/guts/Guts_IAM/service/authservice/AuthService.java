@@ -1,10 +1,10 @@
 package com.guts.Guts_IAM.service.authservice;
 
-import com.guts.Guts_IAM.enums.Roles;
 import com.guts.Guts_IAM.exceptionhandling.exceptions.ResourceNotFoundException;
 import com.guts.Guts_IAM.model.TokenAudit;
 import com.guts.Guts_IAM.model.audits.AuditLog;
 import com.guts.Guts_IAM.model.refreshtoken.RefreshToken;
+import com.guts.Guts_IAM.model.user.Role;
 import com.guts.Guts_IAM.model.user.User;
 import com.guts.Guts_IAM.repo.auditrepo.AuditRepository;
 import com.guts.Guts_IAM.repo.auditrepo.TokenAuditRepository;
@@ -13,6 +13,8 @@ import com.guts.Guts_IAM.repo.userrepo.UserRepository;
 import com.guts.Guts_IAM.security.jwt.jwtutils.JwtUtils;
 import com.guts.Guts_IAM.security.signup.JwtResponse;
 import com.guts.Guts_IAM.security.signup.LoginDto;
+import com.guts.Guts_IAM.security.utils.HashUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -38,7 +40,7 @@ public class AuthService {
     private final TokenAuditRepository tokenAuditRepository;
     private final AuditRepository auditRepo;
 
-    public JwtResponse login(LoginDto loginDto) {
+    public JwtResponse login(LoginDto loginDto, HttpServletRequest httpServletRequest) {
         authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginDto.getUserMail(),
@@ -50,17 +52,23 @@ public class AuthService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         String accessToken = jwtUtils.generateAccessToken(user);
+        String hashedToken= HashUtil.sha256(accessToken);
         RefreshToken refreshToken = createRefreshToken(user);
         TokenAudit tokenAudit=new TokenAudit();
-        tokenAudit.setAccessToken(accessToken);
+        tokenAudit.setAccessToken(hashedToken);
         tokenAudit.setAction("Token is generated for "+user.getUserMail());
         tokenAudit.setTokenOwner(user.getUserMail());
         tokenAuditRepository.save(tokenAudit);
 
         AuditLog auditLog=new AuditLog();
-        auditLog.setLogAction(user.getUserMail()+" logged In");
+        auditLog.setLogAction("LOGIN");
         auditLog.setUserMail(user.getUserMail());
-        auditLog.setUserRoles(user.getUserRoles());
+        auditLog.setResource("AUTH");
+        auditLog.setResourceId(user.getUserId().toString());
+        auditLog.setRoleName(user.getRoles().toString());
+        auditLog.setUserId(user.getUserId());
+        auditLog.setIpAddress(httpServletRequest.getRemoteAddr());
+        auditLog.setUserAgent(httpServletRequest.getHeader("User-Agent"));
         auditRepo.save(auditLog);
         return new JwtResponse(accessToken, refreshToken.getToken(), "Bearer");
     }
@@ -74,7 +82,7 @@ public class AuthService {
         return refreshTokenRepository.save(token);
     }
 
-    public JwtResponse refreshAccessToken(String refreshTokenStr) {
+    public JwtResponse refreshAccessToken(String refreshTokenStr, HttpServletRequest httpServletRequest) {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenStr)
                 .orElseThrow(() -> new RuntimeException("Refresh token not found"));
 
@@ -82,12 +90,28 @@ public class AuthService {
             refreshTokenRepository.delete(refreshToken);
             throw new RuntimeException("Refresh token expired. Please login again.");
         }
-
         String newAccessToken = jwtUtils.generateAccessToken(refreshToken.getUser());
+
+        TokenAudit tokenAudit=new TokenAudit();
+        tokenAudit.setTokenOwner(refreshToken.getUser().getUserMail());
+        tokenAudit.setAction("REFRESH_TOKEN");
+        String hashedNewToken=HashUtil.sha256(newAccessToken);
+
+        AuditLog auditLog = new AuditLog();
+        auditLog.setLogAction("REFRESH_TOKEN");
+        auditLog.setUserMail(refreshToken.getUser().getUserMail());
+        auditLog.setResource("AUTH");
+        auditLog.setResourceId(refreshToken.getUser().getUserId().toString());
+        auditLog.setUserId(refreshToken.getUser().getUserId());
+        auditLog.setRoleName(refreshToken.getUser().getRoles().toString());
+        auditLog.setIpAddress(httpServletRequest.getRemoteAddr());
+        auditLog.setUserAgent(httpServletRequest.getHeader("User-Agent"));
+
+        auditRepo.save(auditLog);
         return new JwtResponse(newAccessToken, refreshToken.getToken(), "Bearer");
     }
 
-    public void logout(String refreshTokenStr) {
+    public void logout(String refreshTokenStr, HttpServletRequest httpServletRequest) {
         Optional<RefreshToken>  refreshTokenCheck=refreshTokenRepository.findByToken(refreshTokenStr);
 
         if(refreshTokenCheck.isEmpty()){
@@ -104,14 +128,19 @@ public class AuthService {
                 .getUser()
                 .getUserMail();
 
-        Set<Roles> rolesSet=refreshTokenCheck
+        Set<Role> rolesSet=refreshTokenCheck
                 .get()
                 .getUser()
-                .getUserRoles();
+                .getRoles();
 
-        auditLog.setUserRoles(rolesSet);
-        auditLog.setLogAction(userMail+" Logged Out");
+        auditLog.setRoleName(rolesSet.toString());
+        auditLog.setLogAction("LOGOUT");
         auditLog.setUserMail(userMail);
+        auditLog.setUserId(refreshTokenCheck.get().getUser().getUserId());
+        auditLog.setResourceId(refreshTokenCheck.get().getUser().getUserId().toString());
+        auditLog.setResource("AUTH");
+        auditLog.setIpAddress(httpServletRequest.getRemoteAddr());
+        auditLog.setUserAgent(httpServletRequest.getHeader("User-Agent"));
 
         auditRepo.save(auditLog);
         refreshTokenRepository.deleteByToken(refreshTokenStr);

@@ -1,6 +1,7 @@
 package com.guts.Guts_IAM.model.audits;
 
 import com.guts.Guts_IAM.enums.Roles;
+import com.guts.Guts_IAM.model.user.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,9 +25,19 @@ public class AuditLog {
 
     private String logAction;
 
+    private Integer userId;
+
     private String userMail;
 
-    private Set<Roles> userRoles;
+    private String roleName;
+
+    private String resource;
+
+    private String resourceId;
+
+    private String ipAddress;
+
+    private String userAgent;
 
     @CreatedDate
     @Column(updatable = false)

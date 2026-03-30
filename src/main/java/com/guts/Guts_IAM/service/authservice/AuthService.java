@@ -1,7 +1,7 @@
 package com.guts.Guts_IAM.service.authservice;
 
 import com.guts.Guts_IAM.exceptionhandling.exceptions.ResourceNotFoundException;
-import com.guts.Guts_IAM.model.TokenAudit;
+import com.guts.Guts_IAM.model.tokenaudit.TokenAudit;
 import com.guts.Guts_IAM.model.audits.AuditLog;
 import com.guts.Guts_IAM.model.refreshtoken.RefreshToken;
 import com.guts.Guts_IAM.model.user.Role;
@@ -82,6 +82,7 @@ public class AuthService {
         return refreshTokenRepository.save(token);
     }
 
+
     public JwtResponse refreshAccessToken(String refreshTokenStr, HttpServletRequest httpServletRequest) {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenStr)
                 .orElseThrow(() -> new RuntimeException("Refresh token not found"));
@@ -90,6 +91,7 @@ public class AuthService {
             refreshTokenRepository.delete(refreshToken);
             throw new RuntimeException("Refresh token expired. Please login again.");
         }
+
         String newAccessToken = jwtUtils.generateAccessToken(refreshToken.getUser());
 
         TokenAudit tokenAudit=new TokenAudit();
@@ -110,6 +112,7 @@ public class AuthService {
         auditRepo.save(auditLog);
         return new JwtResponse(newAccessToken, refreshToken.getToken(), "Bearer");
     }
+
 
     public void logout(String refreshTokenStr, HttpServletRequest httpServletRequest) {
         Optional<RefreshToken>  refreshTokenCheck=refreshTokenRepository.findByToken(refreshTokenStr);

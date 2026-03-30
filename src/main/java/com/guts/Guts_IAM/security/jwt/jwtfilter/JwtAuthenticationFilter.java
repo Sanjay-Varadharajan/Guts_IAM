@@ -41,28 +41,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             token=authHeader.substring(7).trim();
 
             try {
-                if (jwtUtils.validateToken(token)) {
-                    String userName = jwtUtils.getUsernameFromToken(token);
-                    CustomUserDetails userDetails =
-                            (CustomUserDetails) customUserDetailService.loadUserByUsername(userName);
+                String userName = jwtUtils.getUsernameFromToken(token);
 
+                CustomUserDetails userDetails =
+                        (CustomUserDetails) customUserDetailService.loadUserByUsername(userName);
 
-                    UsernamePasswordAuthenticationToken authenticationToken =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails, //principal
-                                    null,  //we dont save credentials here
-                                    userDetails.getAuthorities()
-                            );
-                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-                }
-            }
+                UsernamePasswordAuthenticationToken authenticationToken =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
 
-            catch (io.jsonwebtoken.ExpiredJwtException e) {
+                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+
+            } catch (io.jsonwebtoken.ExpiredJwtException e) {
                 throw new UnauthorizedException("JWT token expired");
             } catch (io.jsonwebtoken.JwtException e) {
                 throw new UnauthorizedException("JWT token invalid");
-            } catch (Exception e) {
-                throw new UnauthorizedException("Authentication failed: " + e.getMessage());
             }
         }
         filterChain.doFilter(request,response);

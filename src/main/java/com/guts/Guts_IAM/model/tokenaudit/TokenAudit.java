@@ -1,4 +1,4 @@
-package com.guts.Guts_IAM.model;
+package com.guts.Guts_IAM.model.tokenaudit;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;

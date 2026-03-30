@@ -1,7 +1,5 @@
 package com.guts.Guts_IAM.model.audits;
 
-import com.guts.Guts_IAM.enums.Roles;
-import com.guts.Guts_IAM.model.user.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,7 +8,6 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.Set;
 
 @Entity
 @AllArgsConstructor

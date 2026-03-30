@@ -4,3 +4,6 @@ Manager	-APPROVE_REQUEST, VIEW_TEAM_DATA
 Employee -VIEW_OWN_DATA, UPDATE_PROFILE
 Guest	-VIEW_PUBLIC_DATA
 Auditor	-VIEW_LOGS
+
+
+create view audit log for user

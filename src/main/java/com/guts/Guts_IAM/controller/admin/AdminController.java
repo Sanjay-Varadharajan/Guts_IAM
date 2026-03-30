@@ -2,14 +2,11 @@ package com.guts.Guts_IAM.controller.admin;
 
 
 import com.guts.Guts_IAM.exceptionhandling.apiresponse.ApiResponse;
-import com.guts.Guts_IAM.model.audits.AuditLog;
-import com.guts.Guts_IAM.model.user.User;
 import com.guts.Guts_IAM.security.signup.AuditLogDto;
 import com.guts.Guts_IAM.security.signup.UserResponseDto;
 import com.guts.Guts_IAM.service.adminservice.AdminService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,7 +29,7 @@ public class AdminController {
     private final AdminService adminService;
 
     @GetMapping("/users/active")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Page<UserResponseDto>>> getAllActiveUsers(Principal principal, @PageableDefault(
             page = 0,
             size = 10,
@@ -55,7 +52,7 @@ public class AdminController {
     }
 
     @PatchMapping("/user/{userId}/status")
-    @PreAuthorize("hasRole('ROLE_ADMIN)")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UserResponseDto>> updateUserStatus(@PathVariable Integer userId, Principal principal, HttpServletRequest httpServletRequest){
         UserResponseDto response=adminService.updateUserStatus(userId,principal);
 
@@ -70,7 +67,7 @@ public class AdminController {
     }
 
     @GetMapping("/logs/viewall")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Page<AuditLogDto>>> getAllAuditLog(Principal principal,
                                                                          @PageableDefault(
                                                                               page = 0,

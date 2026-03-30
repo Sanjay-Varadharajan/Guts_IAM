@@ -11,6 +11,7 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -21,6 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfiguration {
 
     private final CustomUserDetailService customUserDetailService;
@@ -38,12 +40,14 @@ public class SecurityConfiguration {
                         )
 
                         .authorizeHttpRequests(authorize->
-                                authorize.requestMatchers("/api/auth/*").permitAll()
-                                        .requestMatchers("/api/manager").hasRole("MANAGER")
-                                        .requestMatchers("/api/employee").hasRole("EMPLOYEE")
-                                        .requestMatchers("/api/admin").hasRole("ADMIN")
-                                        .requestMatchers("/api/guest").hasRole("GUEST")
-                                        .requestMatchers("/api/auditor").hasRole("AUDITOR")
+                                authorize
+                                        .requestMatchers("/api/manager/**").hasRole("MANAGER")
+                                        .requestMatchers("/api/employee/**").hasRole("EMPLOYEE")
+                                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                                        .requestMatchers("/api/guest/**").hasRole("GUEST")
+                                        .requestMatchers("/api/auditor/**").hasRole("AUDITOR")
+                                .requestMatchers("/api/auth/**").permitAll()
+
                                         .anyRequest().authenticated())
 
                         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

@@ -7,3 +7,5 @@ Auditor	-VIEW_LOGS
 
 
 create view audit log for user
+
+add mail dependency

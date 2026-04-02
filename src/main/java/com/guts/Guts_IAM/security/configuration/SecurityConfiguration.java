@@ -47,7 +47,6 @@ public class SecurityConfiguration {
                                         .requestMatchers("/api/guest/**").hasRole("GUEST")
                                         .requestMatchers("/api/auditor/**").hasRole("AUDITOR")
                                 .requestMatchers("/api/auth/**").permitAll()
-
                                         .anyRequest().authenticated())
 
                         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

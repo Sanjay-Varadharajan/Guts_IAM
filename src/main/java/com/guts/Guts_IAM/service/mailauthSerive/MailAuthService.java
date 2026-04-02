@@ -1,0 +1,88 @@
+package com.guts.Guts_IAM.service.mailauthSerive;
+
+import com.guts.Guts_IAM.mail.service.EmailService;
+import com.guts.Guts_IAM.model.otp.PasswordResetOtp;
+import com.guts.Guts_IAM.model.user.User;
+import com.guts.Guts_IAM.repo.otp.PasswordResetOtpRepository;
+import com.guts.Guts_IAM.repo.userrepo.UserRepository;
+import com.guts.Guts_IAM.security.signup.ForgotPasswordRequest;
+import com.guts.Guts_IAM.security.signup.ResetPasswordRequest;
+import com.guts.Guts_IAM.utils.OtpUtil;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+
+@Service
+@RequiredArgsConstructor
+public class MailAuthService {
+
+    private final UserRepository userRepository;
+    private final PasswordResetOtpRepository otpRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
+
+    private static final int OTP_LENGTH = 6;
+
+
+
+    public void forgotPassword(ForgotPasswordRequest req) {
+
+        User user = userRepository.findByUserMailAndActiveTrue(req.eMail())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        PasswordResetOtp existing = otpRepository.findById(req.eMail()).orElse(null);
+
+        if (existing != null && existing.getLastRequestedAt() != null &&
+                existing.getLastRequestedAt().plusSeconds(30).isAfter(LocalDateTime.now())) {
+            throw new RuntimeException("Wait before requesting again");
+        }
+
+        String otp = OtpUtil.generateOtp(OTP_LENGTH);
+
+        PasswordResetOtp data = new PasswordResetOtp();
+        data.setEmail(req.eMail());
+        data.setOtpHash(passwordEncoder.encode(otp)); // 🔥 hash OTP
+        data.setExpiryTime(LocalDateTime.now().plusMinutes(5));
+        data.setAttempts(0);
+        data.setLastRequestedAt(LocalDateTime.now());
+
+        otpRepository.save(data);
+
+        emailService.sendOtp(req.eMail(), otp);
+    }
+
+    public void resetPassword(ResetPasswordRequest req) {
+
+        PasswordResetOtp data = otpRepository.findById(req.email())
+                .orElseThrow(() -> new RuntimeException("OTP not found"));
+
+        if (data.getExpiryTime().isBefore(LocalDateTime.now())) {
+            otpRepository.deleteById(req.email());
+            throw new RuntimeException("OTP expired");
+        }
+
+        if (data.getAttempts() >= 3) {
+            otpRepository.deleteById(req.email());
+            throw new RuntimeException("Too many attempts");
+        }
+
+        if (!passwordEncoder.matches(req.otp(), data.getOtpHash())) {
+            data.setAttempts(data.getAttempts() + 1);
+            otpRepository.save(data);
+            throw new RuntimeException("Invalid OTP");
+        }
+
+        User user = userRepository.findByUserMailAndActiveTrue(req.email())
+                .orElseThrow();
+
+        user.setUserPassword(passwordEncoder.encode(req.newPassword()));
+
+        user.setTokenVersion(user.getTokenVersion() + 1);
+
+        userRepository.save(user);
+
+        otpRepository.deleteById(req.email());
+    }
+}

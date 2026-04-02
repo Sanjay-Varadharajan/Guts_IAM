@@ -55,10 +55,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
-            } catch (io.jsonwebtoken.ExpiredJwtException e) {
-                throw new UnauthorizedException("JWT token expired");
-            } catch (io.jsonwebtoken.JwtException e) {
-                throw new UnauthorizedException("JWT token invalid");
+            } catch (Exception e) {
             }
         }
         filterChain.doFilter(request,response);
@@ -67,6 +64,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getServletPath();
-        return path.equals("/api/auth/login") || path.equals("/api/auth/refresh");
+        return path.equals("/api/auth/");
     }
 }

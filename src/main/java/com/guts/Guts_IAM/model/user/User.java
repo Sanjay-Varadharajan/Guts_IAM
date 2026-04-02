@@ -46,6 +46,9 @@
         private Set<Role> roles;
 
         private boolean active=true;
+
+        @Column(nullable = false)
+        private int tokenVersion = 0;
     
         @CreatedDate
         @Column(updatable = false)

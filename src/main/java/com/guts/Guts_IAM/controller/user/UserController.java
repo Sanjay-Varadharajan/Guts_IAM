@@ -8,6 +8,7 @@ import com.guts.Guts_IAM.security.signup.AuditLogDtoForUser;
 import com.guts.Guts_IAM.security.signup.UserRequestDto;
 import com.guts.Guts_IAM.security.signup.UserResponseDto;
 import com.guts.Guts_IAM.service.userservice.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,9 +30,9 @@ public class UserController {
 
 
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<UserResponseDto>> viewProfile(Principal principal){
+    public ResponseEntity<ApiResponse<UserResponseDto>> viewProfile(Principal principal, HttpServletRequest request){
 
-        UserResponseDto profile=userService.viewProfile(principal);
+        UserResponseDto profile=userService.viewProfile(principal,request);
 
         ApiResponse response=new ApiResponse<>(
                 true,
@@ -45,9 +46,9 @@ public class UserController {
 
 
     @PatchMapping("/me/update")
-    public ResponseEntity<ApiResponse<UserResponseDto>> updateProfile(@RequestBody UserRequestDto userRequestDto, Principal principal){
+    public ResponseEntity<ApiResponse<UserResponseDto>> updateProfile(@RequestBody UserRequestDto userRequestDto, Principal principal,HttpServletRequest request){
 
-        UserResponseDto updatedProfile=userService.updateProfile(userRequestDto,principal);
+        UserResponseDto updatedProfile=userService.updateProfile(userRequestDto,principal,request);
 
         ApiResponse apiResponse=new ApiResponse(
                 true,
@@ -66,9 +67,10 @@ public class UserController {
                                                                           size= 10,
                                                                           sort ="auditedOn",
                                                                           direction = Sort.Direction.DESC)
-                                                                          Pageable pageable){
+                                                                          Pageable pageable
+    ,HttpServletRequest request){
 
-        Page<AuditLogDtoForUser> auditResponse=userService.viewLogs(principal,pageable);
+        Page<AuditLogDtoForUser> auditResponse=userService.viewLogs(principal,pageable,request);
 
         ApiResponse response=new ApiResponse<>(
                 true,

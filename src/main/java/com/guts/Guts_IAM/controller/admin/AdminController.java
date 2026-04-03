@@ -35,11 +35,11 @@ public class AdminController {
             size = 10,
             sort = "userCreatedOn",
             direction = Sort.Direction.DESC)
-                                        Pageable pageable,HttpServletRequest httpServletRequest
+                                        Pageable pageable,HttpServletRequest request
     )
     {
 
-        Page<UserResponseDto> response=adminService.getAllActiveUsers(principal,pageable);
+        Page<UserResponseDto> response=adminService.getAllActiveUsers(principal,pageable,request);
 
         ApiResponse apiResponse=new ApiResponse<>(
                 true,
@@ -53,8 +53,8 @@ public class AdminController {
 
     @PatchMapping("/user/{userId}/status")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<UserResponseDto>> updateUserStatus(@PathVariable Integer userId, Principal principal, HttpServletRequest httpServletRequest){
-        UserResponseDto response=adminService.updateUserStatus(userId,principal);
+    public ResponseEntity<ApiResponse<UserResponseDto>> updateUserStatus(@PathVariable Integer userId, Principal principal, HttpServletRequest request){
+        UserResponseDto response=adminService.updateUserStatus(userId,principal,request);
 
         ApiResponse apiResponse=new ApiResponse<>(
                 true,
@@ -74,10 +74,11 @@ public class AdminController {
                                                                               size = 10,
                                                                               sort = "auditedOn",
                                                                               direction = Sort.Direction.DESC)
-                                                                      Pageable pageable
+                                                                      Pageable pageable,
+                                                                         HttpServletRequest request
                                                                       ){
 
-        Page<AuditLogDto> dtoResponse=adminService.getAllAuditLog(principal,pageable);
+        Page<AuditLogDto> dtoResponse=adminService.getAllAuditLog(principal,pageable,request);
 
         ApiResponse response=new ApiResponse<>(
                 true,

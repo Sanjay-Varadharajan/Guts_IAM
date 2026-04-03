@@ -7,6 +7,7 @@ import com.guts.Guts_IAM.repo.userrepo.UserRepository;
 import com.guts.Guts_IAM.security.signup.AuditLogDtoForUser;
 import com.guts.Guts_IAM.security.signup.UserRequestDto;
 import com.guts.Guts_IAM.security.signup.UserResponseDto;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +29,7 @@ public class UserService {
 
     private final AuditRepository auditRepository;
 
-    public UserResponseDto viewProfile(Principal principal) {
+    public UserResponseDto viewProfile(Principal principal, HttpServletRequest request) {
 
         User userExisting=userRepository.findByUserMailAndActiveTrue(principal.getName()).orElseThrow(
                 ()->new UsernameNotFoundException("Login and Try Again")
@@ -36,11 +37,22 @@ public class UserService {
 
         UserResponseDto userResponseDto=new UserResponseDto(userExisting);
 
+        AuditLog auditLog=new AuditLog();
+        auditLog.setRoleName(userExisting.getRoles().toString());
+        auditLog.setUserAgent(request.getHeader("User-Agent"));
+        auditLog.setLogAction("PROFILE_VIEWED");
+        auditLog.setResource("VIEW");
+        auditLog.setIpAddress(request.getRemoteAddr());
+        auditLog.setUserMail(userExisting.getUserMail());
+        auditLog.setResourceId(userExisting.getUserId().toString());
+        auditRepository.save(auditLog);
+
+
         return userResponseDto;
     }
 
 
-    public UserResponseDto updateProfile(UserRequestDto userRequestDto, Principal principal) {
+    public UserResponseDto updateProfile(UserRequestDto userRequestDto, Principal principal, HttpServletRequest request) {
 
         User userExisting=userRepository.findByUserMailAndActiveTrue(principal.getName()).orElseThrow(
                 ()->new UsernameNotFoundException(principal.getName()+" not found ,Login and try")
@@ -54,10 +66,20 @@ public class UserService {
 
         UserResponseDto userResponseDto=new UserResponseDto(userExisting);
 
+        AuditLog auditLog=new AuditLog();
+        auditLog.setRoleName(userExisting.getRoles().toString());
+        auditLog.setUserAgent(request.getHeader("User-Agent"));
+        auditLog.setLogAction("PROFILE_UPDATED");
+        auditLog.setResource("UPDATE");
+        auditLog.setIpAddress(request.getRemoteAddr());
+        auditLog.setUserMail(userExisting.getUserMail());
+        auditLog.setResourceId(userExisting.getUserId().toString());
+        auditRepository.save(auditLog);
+
         return userResponseDto;
     }
 
-    public Page<AuditLogDtoForUser> viewLogs(Principal principal, Pageable pageable) {
+    public Page<AuditLogDtoForUser> viewLogs(Principal principal, Pageable pageable, HttpServletRequest request) {
 
         User user=userRepository.findByUserMailAndActiveTrue(principal.getName()).orElseThrow(
                 ()->new UsernameNotFoundException("User not Found,Login and try"));
@@ -75,9 +97,17 @@ public class UserService {
             }
         });
 
+        AuditLog auditLog=new AuditLog();
+        auditLog.setRoleName(user.getRoles().toString());
+        auditLog.setUserAgent(request.getHeader("User-Agent"));
+        auditLog.setLogAction("LOG_VIEWED");
+        auditLog.setResource("VIEW");
+        auditLog.setIpAddress(request.getRemoteAddr());
+        auditLog.setUserMail(user.getUserMail());
+        auditLog.setResourceId(user.getUserId().toString());
+        auditRepository.save(auditLog);
+
         Page<AuditLog> auditLogs=auditRepository.findByUserMail(pageable,principal.getName());
         return auditLogs.map(AuditLogDtoForUser::new);
-
-
     }
 }

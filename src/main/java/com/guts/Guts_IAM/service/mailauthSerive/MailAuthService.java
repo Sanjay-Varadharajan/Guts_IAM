@@ -43,7 +43,7 @@ public class MailAuthService {
 
         PasswordResetOtp data = new PasswordResetOtp();
         data.setEmail(req.eMail());
-        data.setOtpHash(passwordEncoder.encode(otp)); // 🔥 hash OTP
+        data.setOtpHash(passwordEncoder.encode(otp));
         data.setExpiryTime(LocalDateTime.now().plusMinutes(5));
         data.setAttempts(0);
         data.setLastRequestedAt(LocalDateTime.now());

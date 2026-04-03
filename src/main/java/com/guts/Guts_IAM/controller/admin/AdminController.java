@@ -25,7 +25,6 @@ import java.time.LocalDateTime;
 @RestController
 public class AdminController {
 
-    @Autowired
     private final AdminService adminService;
 
     @GetMapping("/users/active")

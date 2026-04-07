@@ -20,4 +20,17 @@ public class EmailService {
         simpleMailMessage.setText("your otp is: "+otp+" (Valid for 5 minutes)");
         javaMailSender.send(simpleMailMessage);
     }
-}
+
+    public void sendUnlockOtp(String email, String otp) {
+        SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
+        simpleMailMessage.setTo(email);
+        simpleMailMessage.setSubject("Guts IAM - Unlock Account");
+        simpleMailMessage.setText("Your OTP to unlock your account is: " + otp + " (valid for 5 minutes)");
+        javaMailSender.send(simpleMailMessage);
+    }
+
+
+    }
+
+
+

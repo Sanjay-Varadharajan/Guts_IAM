@@ -41,37 +41,62 @@ public class AuthService {
     private final AuditRepository auditRepo;
 
     public JwtResponse login(LoginDto loginDto, HttpServletRequest httpServletRequest) {
-        authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginDto.getUserMail(),
-                        loginDto.getUserPassword()
-                )
-        );
+
 
         User user = userRepository.findByUserMailAndActiveTrue(loginDto.getUserMail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        String accessToken = jwtUtils.generateAccessToken(user);
-        String hashedToken= HashUtil.sha256(accessToken);
-        RefreshToken refreshToken = createRefreshToken(user);
-        TokenAudit tokenAudit=new TokenAudit();
-        tokenAudit.setAccessToken(hashedToken);
-        tokenAudit.setAction("Token is generated for "+user.getUserMail());
-        tokenAudit.setTokenOwner(user.getUserMail());
-        tokenAuditRepository.save(tokenAudit);
+        if (!user.isAccountNonLocked()) {
+            throw new RuntimeException("Account is locked. Please unlock using OTP.");
+        }
 
-        AuditLog auditLog=new AuditLog();
-        auditLog.setLogAction("LOGIN");
-        auditLog.setUserMail(user.getUserMail());
-        auditLog.setResource("AUTH");
-        auditLog.setResourceId(user.getUserId().toString());
-        auditLog.setRoleName(user.getRoles().toString());
-        auditLog.setUserId(user.getUserId());
-        auditLog.setIpAddress(httpServletRequest.getRemoteAddr());
-        auditLog.setUserAgent(httpServletRequest.getHeader("User-Agent"));
-        auditRepo.save(auditLog);
-        return new JwtResponse(accessToken, refreshToken.getToken(), "Bearer");
-    }
+
+        try {
+            authManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginDto.getUserMail(),
+                            loginDto.getUserPassword()
+                    )
+            );
+
+            user.setFailedAttempts(0);
+            userRepository.save(user);
+        }catch (Exception e){
+            user.setFailedAttempts(user.getFailedAttempts() + 1);
+
+            if (user.getFailedAttempts() >= 5) {
+                user.setAccountNonLocked(false);
+                user.setLockTime(java.time.LocalDateTime.now());
+            }
+
+            userRepository.save(user);
+
+            throw new RuntimeException("Invalid credentials");
+        }
+
+
+            String accessToken = jwtUtils.generateAccessToken(user);
+            String hashedToken = HashUtil.sha256(accessToken);
+            RefreshToken refreshToken = createRefreshToken(user);
+            TokenAudit tokenAudit = new TokenAudit();
+            tokenAudit.setAccessToken(hashedToken);
+            tokenAudit.setAction("Token is generated for " + user.getUserMail());
+            tokenAudit.setTokenOwner(user.getUserMail());
+            tokenAuditRepository.save(tokenAudit);
+
+            AuditLog auditLog = new AuditLog();
+            auditLog.setLogAction("LOGIN");
+            auditLog.setUserMail(user.getUserMail());
+            auditLog.setResource("AUTH");
+            auditLog.setResourceId(user.getUserId().toString());
+            auditLog.setRoleName(user.getRoles().toString());
+            auditLog.setUserId(user.getUserId());
+            auditLog.setIpAddress(httpServletRequest.getRemoteAddr());
+            auditLog.setUserAgent(httpServletRequest.getHeader("User-Agent"));
+            auditRepo.save(auditLog);
+            return new JwtResponse(accessToken, refreshToken.getToken(), "Bearer");
+        }
+
 
 
     public RefreshToken createRefreshToken(User user) {

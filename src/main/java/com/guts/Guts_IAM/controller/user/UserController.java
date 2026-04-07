@@ -16,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -30,6 +31,7 @@ public class UserController {
 
 
     @GetMapping("/me")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<UserResponseDto>> viewProfile(Principal principal, HttpServletRequest request){
 
         UserResponseDto profile=userService.viewProfile(principal,request);
@@ -46,6 +48,7 @@ public class UserController {
 
 
     @PatchMapping("/me/update")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<UserResponseDto>> updateProfile(@RequestBody UserRequestDto userRequestDto, Principal principal,HttpServletRequest request){
 
         UserResponseDto updatedProfile=userService.updateProfile(userRequestDto,principal,request);
@@ -61,6 +64,7 @@ public class UserController {
     }
 
     @GetMapping("/me/logs")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<Page<AuditLogDtoForUser>>> viewLogs(Principal principal,
                                                                           @PageableDefault(
                                                                                   page = 0,

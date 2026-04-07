@@ -53,4 +53,12 @@
         @CreatedDate
         @Column(updatable = false)
         private LocalDateTime userCreatedOn;
+
+        @Column(nullable = false)
+        private boolean accountNonLocked = true;
+
+        @Column(nullable = false)
+        private int failedAttempts = 0;
+
+        private LocalDateTime lockTime;
     }

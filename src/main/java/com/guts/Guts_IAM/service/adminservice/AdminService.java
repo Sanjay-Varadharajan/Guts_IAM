@@ -5,7 +5,9 @@ import com.guts.Guts_IAM.model.audits.AuditLog;
 import com.guts.Guts_IAM.model.user.User;
 import com.guts.Guts_IAM.repo.auditrepo.AuditRepository;
 import com.guts.Guts_IAM.repo.userrepo.UserRepository;
+import com.guts.Guts_IAM.security.signup.AdminRequestDto;
 import com.guts.Guts_IAM.security.signup.AuditLogDto;
+import com.guts.Guts_IAM.security.signup.UserRequestDto;
 import com.guts.Guts_IAM.security.signup.UserResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
@@ -125,5 +127,54 @@ public class AdminService {
 
 
         return auditLogs.map(AuditLogDto::new);
+    }
+
+    public UserResponseDto viewProfile(Principal principal, HttpServletRequest request) {
+
+        User userExisting=userRepository.findByUserMailAndActiveTrue(principal.getName()).orElseThrow(
+                ()->new UsernameNotFoundException("Login and Try Again")
+        );
+
+        UserResponseDto userResponseDto=new UserResponseDto(userExisting);
+
+        AuditLog auditLog=new AuditLog();
+        auditLog.setRoleName(userExisting.getRoles().toString());
+        auditLog.setUserAgent(request.getHeader("User-Agent"));
+        auditLog.setLogAction("PROFILE_VIEWED");
+        auditLog.setResource("VIEW");
+        auditLog.setIpAddress(request.getRemoteAddr());
+        auditLog.setUserMail(userExisting.getUserMail());
+        auditLog.setResourceId(userExisting.getUserId().toString());
+        auditRepository.save(auditLog);
+
+
+        return userResponseDto;
+    }
+
+    public UserResponseDto updateProfile(AdminRequestDto adminRequestDto, Principal principal, HttpServletRequest request) {
+
+        User userExisting=userRepository.findByUserMailAndActiveTrue(principal.getName()).orElseThrow(
+                ()->new UsernameNotFoundException(principal.getName()+" not found ,Login and try")
+        );
+
+        if(adminRequestDto.getAdminName()!=null){
+            userExisting.setUserName(userExisting.getUserName());
+        }
+
+        userRepository.save(userExisting);
+
+        UserResponseDto userResponseDto=new UserResponseDto(userExisting);
+
+        AuditLog auditLog=new AuditLog();
+        auditLog.setRoleName(userExisting.getRoles().toString());
+        auditLog.setUserAgent(request.getHeader("User-Agent"));
+        auditLog.setLogAction("PROFILE_UPDATED");
+        auditLog.setResource("UPDATE");
+        auditLog.setIpAddress(request.getRemoteAddr());
+        auditLog.setUserMail(userExisting.getUserMail());
+        auditLog.setResourceId(userExisting.getUserId().toString());
+        auditRepository.save(auditLog);
+
+        return userResponseDto;
     }
 }

@@ -14,6 +14,7 @@ public class ExpirationCleanUp {
 
     @Scheduled(fixedRate = 600000) // every 10 min
     public void cleanupExpiredOtps() {
+
         otpRepository.deleteByExpiryTimeBefore(LocalDateTime.now());
     }
 }

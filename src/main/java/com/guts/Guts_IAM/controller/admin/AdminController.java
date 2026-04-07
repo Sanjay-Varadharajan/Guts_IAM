@@ -2,7 +2,9 @@ package com.guts.Guts_IAM.controller.admin;
 
 
 import com.guts.Guts_IAM.exceptionhandling.apiresponse.ApiResponse;
+import com.guts.Guts_IAM.security.signup.AdminRequestDto;
 import com.guts.Guts_IAM.security.signup.AuditLogDto;
+import com.guts.Guts_IAM.security.signup.UserRequestDto;
 import com.guts.Guts_IAM.security.signup.UserResponseDto;
 import com.guts.Guts_IAM.service.adminservice.AdminService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -87,6 +89,38 @@ public class AdminController {
         );
 
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<UserResponseDto>> viewProfile(Principal principal, HttpServletRequest request){
+
+        UserResponseDto profile=adminService.viewProfile(principal,request);
+
+        ApiResponse response=new ApiResponse<>(
+                true,
+                principal.getName()+" PROFILE_FETCHED",
+                profile,
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PatchMapping("/me/update")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<UserResponseDto>> updateProfile(@RequestBody AdminRequestDto adminRequestDto, Principal principal, HttpServletRequest request){
+
+        UserResponseDto updatedProfile=adminService.updateProfile(adminRequestDto,principal,request);
+
+        ApiResponse apiResponse=new ApiResponse(
+                true,
+                "PROFILE_UPDATED",
+                updatedProfile,
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
     }
 
 }

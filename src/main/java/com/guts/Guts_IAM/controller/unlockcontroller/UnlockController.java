@@ -1,11 +1,10 @@
 package com.guts.Guts_IAM.controller.unlockcontroller;
 
+import com.guts.Guts_IAM.security.signup.JwtResponse;
 import com.guts.Guts_IAM.service.unlockaccount.UnlockAccountService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/unlock")
@@ -21,13 +20,10 @@ public class UnlockController {
     }
 
     @PostMapping("/verify")
-    public String verify(@RequestParam String email,
-                         @RequestParam String otp) {
-        unlockAccountService.verifyAndUnlock(email, otp);
-        return "Account unlocked";
+    public JwtResponse verify(@RequestParam String email,
+                              @RequestParam String otp,
+                              HttpServletRequest request) {
+
+        return unlockAccountService.verifyOtpAndUnlock(email, otp, request);
     }
-
-
-
-
 }

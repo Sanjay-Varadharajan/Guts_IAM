@@ -1,12 +1,16 @@
 package com.guts.Guts_IAM.service.unlockaccount;
 
-
 import com.guts.Guts_IAM.mail.service.EmailService;
 import com.guts.Guts_IAM.model.otp.AccountUnlockOtp;
+import com.guts.Guts_IAM.model.refreshtoken.RefreshToken;
 import com.guts.Guts_IAM.model.user.User;
 import com.guts.Guts_IAM.repo.otp.AccountUnlockRepo;
 import com.guts.Guts_IAM.repo.userrepo.UserRepository;
+import com.guts.Guts_IAM.security.jwt.jwtutils.JwtUtils;
+import com.guts.Guts_IAM.security.signup.JwtResponse;
+import com.guts.Guts_IAM.service.authservice.AuthService;
 import com.guts.Guts_IAM.utils.OtpUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,9 +25,10 @@ public class UnlockAccountService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final JwtUtils jwtUtils;
+    private final AuthService authService;
 
-
-    private static final int OTP_LENGTH=6;
+    private static final int OTP_LENGTH = 6;
 
     public void sendUnlockOtp(String email) {
 
@@ -56,8 +61,9 @@ public class UnlockAccountService {
         emailService.sendUnlockOtp(email, otp);
     }
 
-
-    public void verifyAndUnlock(String email, String otpInput) {
+    public JwtResponse verifyOtpAndUnlock(String email,
+                                          String otpInput,
+                                          HttpServletRequest request) {
 
         AccountUnlockOtp data = accountUnlockRepo.findById(email)
                 .orElseThrow(() -> new RuntimeException("OTP not found"));
@@ -73,13 +79,15 @@ public class UnlockAccountService {
         }
 
         if (!passwordEncoder.matches(otpInput, data.getOtpHash())) {
-            data.setUnlockAttempts(data.getUnlockAttempts() + 1);
+            int attempts = data.getUnlockAttempts() + 1;
+            data.setUnlockAttempts(attempts);
             accountUnlockRepo.save(data);
-            throw new RuntimeException("Invalid OTP");
+            System.out.println("Failed OTP attempt: " + attempts + " for " + email); // <- debug
+            throw new RuntimeException("Invalid OTP. Attempt " + attempts + "/3");
         }
 
         User user = userRepository.findByUserMailAndActiveTrue(email)
-                .orElseThrow();
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.setAccountNonLocked(true);
         user.setFailedAttempts(0);
@@ -90,5 +98,10 @@ public class UnlockAccountService {
         userRepository.save(user);
 
         accountUnlockRepo.deleteById(email);
+
+        String accessToken = jwtUtils.generateAccessToken(user);
+        RefreshToken refreshToken = authService.createRefreshToken(user);
+
+        return new JwtResponse(accessToken, refreshToken.getToken(), "Bearer");
     }
 }

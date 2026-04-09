@@ -14,6 +14,7 @@ import com.guts.Guts_IAM.security.jwt.jwtutils.JwtUtils;
 import com.guts.Guts_IAM.security.signup.JwtResponse;
 import com.guts.Guts_IAM.security.signup.LoginDto;
 import com.guts.Guts_IAM.security.utils.HashUtil;
+import com.guts.Guts_IAM.service.AuditService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -40,6 +41,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final TokenAuditRepository tokenAuditRepository;
     private final AuditRepository auditRepo;
+    private final AuditService auditService;
 
     public JwtResponse login(LoginDto loginDto, HttpServletRequest request) {
 
@@ -66,6 +68,17 @@ public class AuthService {
             int attempts = updateFailedAttempts(user);
 
             if (attempts >= 3) {
+                AuditLog auditLog=new AuditLog();
+                auditLog.setLogAction("Account Locked due to multiple attempts to login");
+                auditLog.setUserAgent(request.getHeader("User-Agent"));
+                auditLog.setIpAddress(request.getRemoteAddr());
+                auditLog.setRoleName(user.getRoles().toString());
+                auditLog.setResource("AUTH");
+                auditLog.setUserMail(user.getUserMail());
+                auditLog.setUserId(user.getUserId());
+                auditLog.setResourceId(user.getUserId().toString());
+                auditService.saveAudit(auditLog);
+
                 throw new RuntimeException(
                         "Account locked after 3 failed attempts. Please unlock via email."
                 );

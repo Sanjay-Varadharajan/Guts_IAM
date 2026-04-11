@@ -1,7 +1,7 @@
 package com.guts.Guts_IAM.security.userdetails;
 
-import com.guts.Guts_IAM.model.user.User;
-import com.guts.Guts_IAM.repo.userrepo.UserRepository;
+import com.guts.Guts_IAM.user.model.User;
+import com.guts.Guts_IAM.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

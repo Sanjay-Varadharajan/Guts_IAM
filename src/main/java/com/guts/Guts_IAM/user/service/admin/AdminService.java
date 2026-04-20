@@ -157,7 +157,7 @@ public class AdminService {
         );
 
         if(adminRequestDto.getAdminName()!=null){
-            userExisting.setUserName(userExisting.getUserName());
+            userExisting.setUserName(adminRequestDto.getAdminName());
         }
 
         userRepository.save(userExisting);

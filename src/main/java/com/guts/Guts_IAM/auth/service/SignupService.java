@@ -32,6 +32,8 @@ public class SignupService {
 
     private final RoleRepository roleRepository;
 
+
+
     public SignupRequest signup(SignupRequest signUpRequest, HttpServletRequest httpServletRequest) {
         Optional<User> userExists= userRepository.findByUserMailAndActiveTrue(signUpRequest.getUserMail());
 
@@ -62,7 +64,10 @@ public class SignupService {
         auditLog.setLogAction("SIGN_UP");
         auditLog.setRoleName(rolesSet.toString());
         auditLog.setUserMail(user.getUserMail());
-        auditLog.setResourceId(user.getUserId().toString());
+        if (signedUpUser.getUserId() == null) {
+            throw new IllegalStateException("User ID not generated after save");
+        }
+        auditLog.setResourceId(signedUpUser.getUserId().toString());
         auditLog.setResource("AUTH");
         auditLog.setIpAddress(httpServletRequest.getRemoteAddr());
         auditLog.setUserAgent(httpServletRequest.getHeader("User-Agent"));

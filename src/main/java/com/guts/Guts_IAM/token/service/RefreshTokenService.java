@@ -11,10 +11,14 @@ import com.guts.Guts_IAM.token.refreshtoken.model.RefreshToken;
 import com.guts.Guts_IAM.token.refreshtoken.repository.RefreshTokenRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.Date;
+import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -32,7 +36,7 @@ public class RefreshTokenService {
 
         if (refreshToken.getExpiryDate().before(Date.from(Instant.now()))) {
             refreshTokenRepository.delete(refreshToken);
-            throw new RuntimeException("Refresh token expired. Please login again.");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
         }
 
         String newAccessToken = jwtUtils.generateAccessToken(refreshToken.getUser());
@@ -41,6 +45,7 @@ public class RefreshTokenService {
         tokenAudit.setTokenOwner(refreshToken.getUser().getUserMail());
         tokenAudit.setAction("REFRESH_TOKEN");
         String hashedNewToken= HashUtil.sha256(newAccessToken);
+        tokenAudit.setAccessToken(hashedNewToken);
         tokenAuditRepository.save(tokenAudit);
 
         AuditLog auditLog = new AuditLog();
@@ -49,7 +54,11 @@ public class RefreshTokenService {
         auditLog.setResource("AUTH");
         auditLog.setResourceId(refreshToken.getUser().getUserId().toString());
         auditLog.setUserId(refreshToken.getUser().getUserId());
-        auditLog.setRoleName(refreshToken.getUser().getRoles().toString());
+        auditLog.setRoleName(
+                Optional.ofNullable(refreshToken.getUser().getRoles())
+                        .orElse(Set.of())
+                        .toString()
+        );
         auditLog.setIpAddress(httpServletRequest.getRemoteAddr());
         auditLog.setUserAgent(httpServletRequest.getHeader("User-Agent"));
 

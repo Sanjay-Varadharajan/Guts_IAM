@@ -2,7 +2,7 @@ package com.guts.Guts_IAM.auth.controller;
 
 
 import com.guts.Guts_IAM.auth.dto.ForgotPasswordRequest;
-import com.guts.Guts_IAM.auth.service.PasswordAuthService;
+import com.guts.Guts_IAM.service.PasswordAuthService;
 import com.guts.Guts_IAM.auth.dto.ResetPasswordRequest;
 import com.guts.Guts_IAM.common.response.ApiResponse;
 import jakarta.validation.Valid;

@@ -1,9 +1,8 @@
-package com.guts.Guts_IAM.auth;
+package com.guts.Guts_IAM.service;
 
 import com.guts.Guts_IAM.auditlog.model.AuditLog;
 import com.guts.Guts_IAM.auditlog.repository.AuditRepository;
 import com.guts.Guts_IAM.auth.dto.SignupRequest;
-import com.guts.Guts_IAM.auth.service.SignupService;
 import com.guts.Guts_IAM.common.exception.types.ConflictException;
 import com.guts.Guts_IAM.role.enums.Roles;
 import com.guts.Guts_IAM.role.model.Role;
@@ -18,9 +17,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;

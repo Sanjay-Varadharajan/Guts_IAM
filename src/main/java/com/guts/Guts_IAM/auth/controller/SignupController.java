@@ -1,7 +1,7 @@
 package com.guts.Guts_IAM.auth.controller;
 
 import com.guts.Guts_IAM.auth.dto.SignupRequest;
-import com.guts.Guts_IAM.auth.service.SignupService;
+import com.guts.Guts_IAM.service.SignupService;
 import com.guts.Guts_IAM.common.response.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;

@@ -1,4 +1,4 @@
-package com.guts.Guts_IAM.auth;
+package com.guts.Guts_IAM.service;
 
 import com.guts.Guts_IAM.auditlog.dto.AuditLogDtoForUser;
 import com.guts.Guts_IAM.auditlog.model.AuditLog;
@@ -16,7 +16,6 @@ import java.util.Optional;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.data.domain.*;

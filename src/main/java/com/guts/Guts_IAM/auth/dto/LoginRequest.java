@@ -1,11 +1,15 @@
 package com.guts.Guts_IAM.auth.dto;
 
 import jakarta.validation.constraints.NotEmpty;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class LoginRequest {
 
 
@@ -14,4 +18,6 @@ public class LoginRequest {
 
     @NotEmpty(message = "Password is Required")
     private String userPassword;
+
+
 }

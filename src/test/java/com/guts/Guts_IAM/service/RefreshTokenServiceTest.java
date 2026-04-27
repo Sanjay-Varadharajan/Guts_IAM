@@ -1,4 +1,4 @@
-package com.guts.Guts_IAM.auth;
+package com.guts.Guts_IAM.service;
 
 import com.guts.Guts_IAM.auditlog.model.AuditLog;
 import com.guts.Guts_IAM.auditlog.repository.AuditRepository;

@@ -58,25 +58,27 @@ public class SecurityConfiguration {
                                     response.setContentType("application/json");
                                     response.getWriter().write(
                                             """
-                                                    {
-                                                    "error" : "TOKEN_EXPIRED_OR_INVALID"
-                                                    "message" : "Please login Again"
-                                                    }
-                                                    """
+                                            {
+                                                "error": "TOKEN_EXPIRED_OR_INVALID",
+                                                "message": "Please login again"
+                                            }
+                                            """
                                     );
                                 })
                         ).build();
     }
 
+
     @Bean
     public AuthenticationProvider authenticationProvider(){
-        DaoAuthenticationProvider daoAuthenticationProvider=new DaoAuthenticationProvider(customUserDetailService);
+        DaoAuthenticationProvider daoAuthenticationProvider=new DaoAuthenticationProvider();
+        daoAuthenticationProvider.setUserDetailsService(customUserDetailService);
         daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
         return daoAuthenticationProvider;
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration){
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 

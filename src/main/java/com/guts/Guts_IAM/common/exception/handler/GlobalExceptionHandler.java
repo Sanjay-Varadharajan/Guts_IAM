@@ -157,4 +157,11 @@
 
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
             }
+
+            @ExceptionHandler(InvalidCredentialsException.class)
+            public ResponseEntity<?> handleInvalidCredentials(InvalidCredentialsException ex) {
+                return ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body(ex.getMessage());
+            }
         }

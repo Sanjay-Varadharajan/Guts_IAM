@@ -1,4 +1,4 @@
-package com.guts.Guts_IAM.auth.service;
+package com.guts.Guts_IAM.service;
 
 import com.guts.Guts_IAM.auth.dto.LoginRequest;
 import com.guts.Guts_IAM.common.exception.types.ResourceNotFoundException;

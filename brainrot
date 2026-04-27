@@ -16,3 +16,5 @@ attempt incrementing need to be fixed
 
 add ml service for anomaly detection
 need to learn-logistic regression,random forest,decision tree
+
+write controller test using mockmvc

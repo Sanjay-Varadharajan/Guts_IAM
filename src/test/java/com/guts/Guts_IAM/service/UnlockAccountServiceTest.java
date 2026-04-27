@@ -1,9 +1,7 @@
-package com.guts.Guts_IAM.auth;
+package com.guts.Guts_IAM.service;
 
 import com.guts.Guts_IAM.auth.model.AccountUnlockOtp;
 import com.guts.Guts_IAM.auth.repository.AccountUnlockRepository;
-import com.guts.Guts_IAM.auth.service.AuthService;
-import com.guts.Guts_IAM.auth.service.UnlockAccountService;
 import com.guts.Guts_IAM.common.mail.EmailService;
 import com.guts.Guts_IAM.security.jwt.dto.JwtResponse;
 import com.guts.Guts_IAM.security.jwt.util.JwtUtils;

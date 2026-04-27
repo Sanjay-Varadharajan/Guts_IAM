@@ -1,9 +1,8 @@
-package com.guts.Guts_IAM.auth;
+package com.guts.Guts_IAM.service;
 
 import com.guts.Guts_IAM.auditlog.repository.AuditRepository;
 import com.guts.Guts_IAM.auditlog.service.AuditService;
 import com.guts.Guts_IAM.auth.dto.LoginRequest;
-import com.guts.Guts_IAM.auth.service.AuthService;
 import com.guts.Guts_IAM.common.exception.types.ResourceNotFoundException;
 import com.guts.Guts_IAM.role.enums.Roles;
 import com.guts.Guts_IAM.role.model.Role;
@@ -218,8 +217,6 @@ public class AuthServiceTest {
                 authService.logout("invalid", request)
         );
     }
-
-
     @Test
     void updateFailedAttempts_shouldLockAccount() {
 

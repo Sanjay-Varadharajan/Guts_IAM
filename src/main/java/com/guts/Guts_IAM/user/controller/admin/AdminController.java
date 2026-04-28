@@ -15,6 +15,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -29,16 +30,16 @@ public class AdminController {
 
     @GetMapping("/users/active")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Page<UserResponseDto>>> getAllActiveUsers(Principal principal, @PageableDefault(
+    public ResponseEntity<ApiResponse<Page<UserResponseDto>>> getAllActiveUsers(Authentication authentication, @PageableDefault(
             page = 0,
             size = 10,
             sort = "userCreatedOn",
             direction = Sort.Direction.DESC)
-                                        Pageable pageable,HttpServletRequest request
+                                        Pageable pageable, HttpServletRequest request
     )
     {
 
-        Page<UserResponseDto> response=adminService.getAllActiveUsers(principal,pageable,request);
+        Page<UserResponseDto> response=adminService.getAllActiveUsers(authentication,pageable,request);
 
         ApiResponse apiResponse=new ApiResponse<>(
                 true,
@@ -52,8 +53,8 @@ public class AdminController {
 
     @PatchMapping("/user/{userId}/status")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<UserResponseDto>> updateUserStatus(@PathVariable Integer userId, Principal principal, HttpServletRequest request){
-        UserResponseDto response=adminService.updateUserStatus(userId,principal,request);
+    public ResponseEntity<ApiResponse<UserResponseDto>> updateUserStatus(@PathVariable Integer userId, Authentication authentication, HttpServletRequest request){
+        UserResponseDto response=adminService.updateUserStatus(userId,authentication,request);
 
         ApiResponse apiResponse=new ApiResponse<>(
                 true,
@@ -67,7 +68,7 @@ public class AdminController {
 
     @GetMapping("/logs/viewall")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Page<AuditLogDto>>> getAllAuditLog(Principal principal,
+    public ResponseEntity<ApiResponse<Page<AuditLogDto>>> getAllAuditLog(Authentication authentication,
                                                                          @PageableDefault(
                                                                               page = 0,
                                                                               size = 10,
@@ -77,7 +78,7 @@ public class AdminController {
                                                                          HttpServletRequest request
                                                                       ){
 
-        Page<AuditLogDto> dtoResponse=adminService.getAllAuditLog(principal,pageable,request);
+        Page<AuditLogDto> dtoResponse=adminService.getAllAuditLog(authentication,pageable,request);
 
         ApiResponse response=new ApiResponse<>(
                 true,
@@ -91,13 +92,13 @@ public class AdminController {
 
     @GetMapping("/me")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<UserResponseDto>> viewProfile(Principal principal, HttpServletRequest request){
+    public ResponseEntity<ApiResponse<UserResponseDto>> viewProfile(Authentication authentication, HttpServletRequest request){
 
-        UserResponseDto profile=adminService.viewProfile(principal,request);
+        UserResponseDto profile=adminService.viewProfile(authentication,request);
 
         ApiResponse response=new ApiResponse<>(
                 true,
-                principal.getName()+" PROFILE_FETCHED",
+                authentication.getName()+" PROFILE_FETCHED",
                 profile,
                 LocalDateTime.now()
         );
@@ -107,9 +108,9 @@ public class AdminController {
 
     @PatchMapping("/me/update")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<UserResponseDto>> updateProfile(@RequestBody AdminRequestDto adminRequestDto, Principal principal, HttpServletRequest request){
+    public ResponseEntity<ApiResponse<UserResponseDto>> updateProfile(@RequestBody AdminRequestDto adminRequestDto, Authentication authentication, HttpServletRequest request){
 
-        UserResponseDto updatedProfile=adminService.updateProfile(adminRequestDto,principal,request);
+        UserResponseDto updatedProfile=adminService.updateProfile(adminRequestDto,authentication,request);
 
         ApiResponse apiResponse=new ApiResponse(
                 true,

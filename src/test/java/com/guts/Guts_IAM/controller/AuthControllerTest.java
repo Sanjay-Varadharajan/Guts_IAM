@@ -1,8 +1,9 @@
-package com.guts.Guts_IAM.auth.controller;
+package com.guts.Guts_IAM.controller;
 
+import com.guts.Guts_IAM.auth.controller.AuthController;
 import com.guts.Guts_IAM.common.exception.types.InvalidCredentialsException;
 import com.guts.Guts_IAM.security.jwt.dto.JwtResponse;
-import com.guts.Guts_IAM.service.AuthService;
+import com.guts.Guts_IAM.auth.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;

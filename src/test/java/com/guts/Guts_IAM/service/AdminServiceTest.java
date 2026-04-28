@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.*;
 import org.mockito.*;
 import org.springframework.data.domain.*;
+import org.springframework.security.core.Authentication;
 
 import java.security.Principal;
 import java.util.*;
@@ -32,7 +33,7 @@ public class AdminServiceTest {
         private AuditRepository auditRepository;
 
         @Mock
-        private Principal principal;
+        private Authentication authentication;
 
         @Mock
         private HttpServletRequest request;
@@ -66,7 +67,7 @@ public class AdminServiceTest {
     @Test
     void testGetAllActiveUsers_Success() {
 
-        when(principal.getName()).thenReturn("admin@mail.com");
+        when(authentication.getName()).thenReturn("admin@mail.com");
         when(userRepository.findByUserMailAndActiveTrue("admin@mail.com"))
                 .thenReturn(Optional.of(adminUser));
 
@@ -79,7 +80,7 @@ public class AdminServiceTest {
         when(request.getRemoteAddr()).thenReturn("127.0.0.1");
 
         Page<UserResponseDto> result =
-                adminService.getAllActiveUsers(principal, pageable, request);
+                adminService.getAllActiveUsers(authentication, pageable, request);
 
         assertEquals(1, result.getContent().size());
         verify(auditRepository).save(any(AuditLog.class));
@@ -88,14 +89,14 @@ public class AdminServiceTest {
     @Test
     void testGetAllActiveUsers_InvalidSort() {
 
-        when(principal.getName()).thenReturn("admin@mail.com");
+        when(authentication.getName()).thenReturn("admin@mail.com");
         when(userRepository.findByUserMailAndActiveTrue("admin@mail.com"))
                 .thenReturn(Optional.of(adminUser));
 
         Pageable pageable = PageRequest.of(0, 5, Sort.by("invalid"));
 
         assertThrows(Exception.class, () -> {
-            adminService.getAllActiveUsers(principal, pageable, request);
+            adminService.getAllActiveUsers(authentication, pageable, request);
         });
     }
 
@@ -104,7 +105,7 @@ public class AdminServiceTest {
     @Test
     void testUpdateUserStatus_Success() {
 
-        when(principal.getName()).thenReturn("admin@mail.com");
+        when(authentication.getName()).thenReturn("admin@mail.com");
         when(userRepository.findByUserMailAndActiveTrue("admin@mail.com"))
                 .thenReturn(Optional.of(adminUser));
 
@@ -114,9 +115,9 @@ public class AdminServiceTest {
         when(request.getRemoteAddr()).thenReturn("127.0.0.1");
 
         UserResponseDto response =
-                adminService.updateUserStatus(2, principal, request);
+                adminService.updateUserStatus(2, authentication, request);
 
-        assertFalse(normalUser.isActive()); // toggled
+        assertFalse(normalUser.isActive());
         verify(userRepository).save(normalUser);
         verify(auditRepository).save(any(AuditLog.class));
     }
@@ -124,21 +125,21 @@ public class AdminServiceTest {
     @Test
     void testUpdateUserStatus_SelfUpdate() {
 
-        when(principal.getName()).thenReturn("admin@mail.com");
+        when(authentication.getName()).thenReturn("admin@mail.com");
         when(userRepository.findByUserMailAndActiveTrue("admin@mail.com"))
                 .thenReturn(Optional.of(adminUser));
 
         when(userRepository.findById(1)).thenReturn(Optional.of(adminUser));
 
         assertThrows(IllegalArgumentException.class, () -> {
-            adminService.updateUserStatus(1, principal, request);
+            adminService.updateUserStatus(1, authentication, request);
         });
     }
 
     @Test
     void testGetAllAuditLog_Success() {
 
-        when(principal.getName()).thenReturn("admin@mail.com");
+        when(authentication.getName()).thenReturn("admin@mail.com");
         when(userRepository.findByUserMailAndActiveTrue("admin@mail.com"))
                 .thenReturn(Optional.of(adminUser));
 
@@ -151,7 +152,7 @@ public class AdminServiceTest {
         when(request.getRemoteAddr()).thenReturn("127.0.0.1");
 
         Page<AuditLogDto> result =
-                adminService.getAllAuditLog(principal, pageable, request);
+                adminService.getAllAuditLog(authentication, pageable, request);
 
         assertNotNull(result);
         verify(auditRepository).save(any(AuditLog.class));
@@ -160,7 +161,7 @@ public class AdminServiceTest {
     @Test
     void testViewProfile_Success() {
 
-        when(principal.getName()).thenReturn("admin@mail.com");
+        when(authentication.getName()).thenReturn("admin@mail.com");
         when(userRepository.findByUserMailAndActiveTrue("admin@mail.com"))
                 .thenReturn(Optional.of(adminUser));
 
@@ -168,7 +169,7 @@ public class AdminServiceTest {
         when(request.getRemoteAddr()).thenReturn("127.0.0.1");
 
         UserResponseDto response =
-                adminService.viewProfile(principal, request);
+                adminService.viewProfile(authentication, request);
 
         assertNotNull(response);
         verify(auditRepository).save(any(AuditLog.class));
@@ -181,7 +182,7 @@ public class AdminServiceTest {
         AdminRequestDto dto = new AdminRequestDto();
         dto.setAdminName("NewAdmin");
 
-        when(principal.getName()).thenReturn("admin@mail.com");
+        when(authentication.getName()).thenReturn("admin@mail.com");
         when(userRepository.findByUserMailAndActiveTrue("admin@mail.com"))
                 .thenReturn(Optional.of(adminUser));
 
@@ -189,7 +190,7 @@ public class AdminServiceTest {
         when(request.getRemoteAddr()).thenReturn("127.0.0.1");
 
         UserResponseDto response =
-                adminService.updateProfile(dto, principal, request);
+                adminService.updateProfile(dto, authentication, request);
 
         verify(userRepository).save(adminUser);
         verify(auditRepository).save(any(AuditLog.class));

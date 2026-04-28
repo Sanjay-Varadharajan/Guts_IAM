@@ -14,28 +14,31 @@ import java.util.List;
 @Service
 public class CustomUserDetailService implements UserDetailsService {
 
-
     @Autowired
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String userMail) throws UsernameNotFoundException{
-        User user=userRepository.findByUserMailAndActiveTrue(userMail).orElseThrow(()->
-                new UsernameNotFoundException("User Not Found with this email"+userMail));
+    public UserDetails loadUserByUsername(String userMail)
+            throws UsernameNotFoundException {
 
-        List<SimpleGrantedAuthority> authorities = user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority(role.getName().toString()))
-                .toList();
+        User user = userRepository.findByUserMailAndActiveTrue(userMail)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException(
+                                "User Not Found with email: " + userMail
+                        )
+                );
 
-        if(user!=null){
-            return new CustomUserDetails(
-                    user,
-                    user.getUserMail(),
-                    user.getUserPassword(),
-                    user.isActive(),
-                    authorities
-                    );
-        }
-        throw new UsernameNotFoundException("User not Found with email: "+userMail);
+        List<SimpleGrantedAuthority> authorities =
+                user.getRoles()
+                        .stream()
+                        .map(role -> new SimpleGrantedAuthority(role.getName().name()))
+                        .toList();
+
+        return new CustomUserDetails(
+                user.getUserMail(),
+                user.getUserPassword(),
+                user.isActive(),
+                authorities
+        );
     }
 }

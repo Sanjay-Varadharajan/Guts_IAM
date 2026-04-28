@@ -3,6 +3,7 @@ package com.guts.Guts_IAM.service;
 import com.guts.Guts_IAM.auditlog.model.AuditLog;
 import com.guts.Guts_IAM.auditlog.repository.AuditRepository;
 import com.guts.Guts_IAM.auth.dto.SignupRequest;
+import com.guts.Guts_IAM.auth.service.SignupService;
 import com.guts.Guts_IAM.common.exception.types.ConflictException;
 import com.guts.Guts_IAM.role.enums.Roles;
 import com.guts.Guts_IAM.role.model.Role;

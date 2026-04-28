@@ -19,6 +19,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.data.domain.*;
+import org.springframework.security.core.Authentication;
 
 import java.security.Principal;
 import java.util.*;
@@ -36,7 +37,7 @@ public class UserServiceTest {
     private AuditRepository auditRepository;
 
     @Mock
-    private Principal principal;
+    private Authentication authentication;
 
     @Mock
     private HttpServletRequest request;
@@ -62,14 +63,14 @@ public class UserServiceTest {
     @Test
     void testViewProfile_Success() {
 
-        when(principal.getName()).thenReturn("test@mail.com");
+        when(authentication.getName()).thenReturn("test@mail.com");
         when(userRepository.findByUserMailAndActiveTrue("test@mail.com"))
                 .thenReturn(Optional.of(user));
 
         when(request.getHeader("User-Agent")).thenReturn("Chrome");
         when(request.getRemoteAddr()).thenReturn("127.0.0.1");
 
-        UserResponseDto response = userService.viewProfile(principal, request);
+        UserResponseDto response = userService.viewProfile(authentication, request);
 
         assertNotNull(response);
         verify(auditRepository, times(1)).save(any(AuditLog.class));
@@ -78,12 +79,12 @@ public class UserServiceTest {
     @Test
     void testViewProfile_UserNotFound() {
 
-        when(principal.getName()).thenReturn("wrong@mail.com");
+        when(authentication.getName()).thenReturn("wrong@mail.com");
         when(userRepository.findByUserMailAndActiveTrue("wrong@mail.com"))
                 .thenReturn(Optional.empty());
 
         assertThrows(Exception.class, () -> {
-            userService.viewProfile(principal, request);
+            userService.viewProfile(authentication, request);
         });
     }
 
@@ -93,14 +94,14 @@ public class UserServiceTest {
         UserRequestDto dto = new UserRequestDto();
         dto.setUserName("NewName");
 
-        when(principal.getName()).thenReturn("test@mail.com");
+        when(authentication.getName()).thenReturn("test@mail.com");
         when(userRepository.findByUserMailAndActiveTrue("test@mail.com"))
                 .thenReturn(Optional.of(user));
 
         when(request.getHeader("User-Agent")).thenReturn("Chrome");
         when(request.getRemoteAddr()).thenReturn("127.0.0.1");
 
-        UserResponseDto response = userService.updateProfile(dto, principal, request);
+        UserResponseDto response = userService.updateProfile(dto, authentication, request);
 
         assertEquals("NewName", user.getUserName());
         verify(userRepository).save(user);
@@ -110,7 +111,7 @@ public class UserServiceTest {
     @Test
     void testViewLogs_Success() {
 
-        when(principal.getName()).thenReturn("test@mail.com");
+        when(authentication.getName()).thenReturn("test@mail.com");
         when(userRepository.findByUserMailAndActiveTrue("test@mail.com"))
                 .thenReturn(Optional.of(user));
 
@@ -126,7 +127,7 @@ public class UserServiceTest {
         when(request.getRemoteAddr()).thenReturn("127.0.0.1");
 
         Page<AuditLogDtoForUser> result =
-                userService.viewLogs(principal, pageable, request);
+                userService.viewLogs(authentication, pageable, request);
 
         assertNotNull(result);
         verify(auditRepository).save(any(AuditLog.class));
@@ -135,14 +136,14 @@ public class UserServiceTest {
     @Test
     void testViewLogs_InvalidSort() {
 
-        when(principal.getName()).thenReturn("test@mail.com");
+        when(authentication.getName()).thenReturn("test@mail.com");
         when(userRepository.findByUserMailAndActiveTrue("test@mail.com"))
                 .thenReturn(Optional.of(user));
 
         Pageable pageable = PageRequest.of(0, 5, Sort.by("invalidField"));
 
         assertThrows(Exception.class, () -> {
-            userService.viewLogs(principal, pageable, request);
+            userService.viewLogs(authentication, pageable, request);
         });
     }
 }

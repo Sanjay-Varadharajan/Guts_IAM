@@ -15,6 +15,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -30,13 +31,13 @@ public class UserController {
 
     @GetMapping("/me")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<ApiResponse<UserResponseDto>> viewProfile(Principal principal, HttpServletRequest request){
+    public ResponseEntity<ApiResponse<UserResponseDto>> viewProfile(Authentication authentication, HttpServletRequest request){
 
-        UserResponseDto profile=userService.viewProfile(principal,request);
+        UserResponseDto profile=userService.viewProfile(authentication,request);
 
         ApiResponse response=new ApiResponse<>(
                 true,
-                principal.getName()+" PROFILE_FETCHED",
+                authentication.getName()+" PROFILE_FETCHED",
                 profile,
                 LocalDateTime.now()
         );
@@ -47,9 +48,9 @@ public class UserController {
 
     @PatchMapping("/me/update")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<ApiResponse<UserResponseDto>> updateProfile(@RequestBody UserRequestDto userRequestDto, Principal principal,HttpServletRequest request){
+    public ResponseEntity<ApiResponse<UserResponseDto>> updateProfile(@RequestBody UserRequestDto userRequestDto, Authentication authentication,HttpServletRequest request){
 
-        UserResponseDto updatedProfile=userService.updateProfile(userRequestDto,principal,request);
+        UserResponseDto updatedProfile=userService.updateProfile(userRequestDto,authentication,request);
 
         ApiResponse apiResponse=new ApiResponse(
                 true,
@@ -63,7 +64,7 @@ public class UserController {
 
     @GetMapping("/me/logs")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<ApiResponse<Page<AuditLogDtoForUser>>> viewLogs(Principal principal,
+    public ResponseEntity<ApiResponse<Page<AuditLogDtoForUser>>> viewLogs(Authentication authentication,
                                                                           @PageableDefault(
                                                                                   page = 0,
                                                                           size= 10,
@@ -72,7 +73,7 @@ public class UserController {
                                                                           Pageable pageable
     ,HttpServletRequest request){
 
-        Page<AuditLogDtoForUser> auditResponse=userService.viewLogs(principal,pageable,request);
+        Page<AuditLogDtoForUser> auditResponse=userService.viewLogs(authentication,pageable,request);
 
         ApiResponse response=new ApiResponse<>(
                 true,

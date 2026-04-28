@@ -4,6 +4,7 @@ import com.guts.Guts_IAM.auth.dto.ForgotPasswordRequest;
 import com.guts.Guts_IAM.auth.dto.ResetPasswordRequest;
 import com.guts.Guts_IAM.auth.model.PasswordResetOtp;
 import com.guts.Guts_IAM.auth.repository.PasswordResetOtpRepository;
+import com.guts.Guts_IAM.auth.service.PasswordAuthService;
 import com.guts.Guts_IAM.common.mail.EmailService;
 import com.guts.Guts_IAM.user.model.User;
 import com.guts.Guts_IAM.user.repository.UserRepository;

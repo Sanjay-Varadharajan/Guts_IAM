@@ -1,7 +1,7 @@
 package com.guts.Guts_IAM.auth.controller;
 
 
-import com.guts.Guts_IAM.service.AuthService;
+import com.guts.Guts_IAM.auth.service.AuthService;
 import com.guts.Guts_IAM.auth.dto.LoginRequest;
 import com.guts.Guts_IAM.token.refreshtoken.dto.TokenRefreshRequest;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,7 +33,4 @@ public class AuthController {
         authService.logout(request.getRefreshToken(),httpServletRequest);
         return ResponseEntity.ok("Logged out successfully");
     }
-
-
-
 }

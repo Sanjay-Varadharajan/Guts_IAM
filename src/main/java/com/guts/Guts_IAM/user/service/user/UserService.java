@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -29,9 +30,9 @@ public class UserService {
 
     private final AuditRepository auditRepository;
 
-    public UserResponseDto viewProfile(Principal principal, HttpServletRequest request) {
+    public UserResponseDto viewProfile(Authentication authentication, HttpServletRequest request) {
 
-        User userExisting=userRepository.findByUserMailAndActiveTrue(principal.getName()).orElseThrow(
+        User userExisting=userRepository.findByUserMailAndActiveTrue(authentication.getName()).orElseThrow(
                 ()->new UsernameNotFoundException("Login and Try Again")
         );
 
@@ -52,10 +53,10 @@ public class UserService {
     }
 
 
-    public UserResponseDto updateProfile(UserRequestDto userRequestDto, Principal principal, HttpServletRequest request) {
+    public UserResponseDto updateProfile(UserRequestDto userRequestDto, Authentication authentication, HttpServletRequest request) {
 
-        User userExisting=userRepository.findByUserMailAndActiveTrue(principal.getName()).orElseThrow(
-                ()->new UsernameNotFoundException(principal.getName()+" not found ,Login and try")
+        User userExisting=userRepository.findByUserMailAndActiveTrue(authentication.getName()).orElseThrow(
+                ()->new UsernameNotFoundException(authentication.getName()+" not found ,Login and try")
         );
 
         if(userRequestDto.getUserName()!=null){
@@ -79,9 +80,9 @@ public class UserService {
         return userResponseDto;
     }
 
-    public Page<AuditLogDtoForUser> viewLogs(Principal principal, Pageable pageable, HttpServletRequest request) {
+    public Page<AuditLogDtoForUser> viewLogs(Authentication authentication, Pageable pageable, HttpServletRequest request) {
 
-        User user=userRepository.findByUserMailAndActiveTrue(principal.getName()).orElseThrow(
+        User user=userRepository.findByUserMailAndActiveTrue(authentication.getName()).orElseThrow(
                 ()->new UsernameNotFoundException("User not Found,Login and try"));
 
 
@@ -107,7 +108,7 @@ public class UserService {
         auditLog.setResourceId(user.getUserId().toString());
         auditRepository.save(auditLog);
 
-        Page<AuditLog> auditLogs=auditRepository.findByUserMail(pageable,principal.getName());
+        Page<AuditLog> auditLogs=auditRepository.findByUserMail(pageable,authentication.getName());
         return auditLogs.map(AuditLogDtoForUser::new);
     }
 }

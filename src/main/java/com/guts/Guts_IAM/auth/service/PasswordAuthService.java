@@ -1,4 +1,4 @@
-package com.guts.Guts_IAM.service;
+package com.guts.Guts_IAM.auth.service;
 
 import com.guts.Guts_IAM.auth.dto.ForgotPasswordRequest;
 import com.guts.Guts_IAM.auth.model.PasswordResetOtp;

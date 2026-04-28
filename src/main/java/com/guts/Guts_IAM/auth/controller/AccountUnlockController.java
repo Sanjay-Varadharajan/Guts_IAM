@@ -1,6 +1,6 @@
 package com.guts.Guts_IAM.auth.controller;
 
-import com.guts.Guts_IAM.service.UnlockAccountService;
+import com.guts.Guts_IAM.auth.service.UnlockAccountService;
 import com.guts.Guts_IAM.security.jwt.dto.JwtResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

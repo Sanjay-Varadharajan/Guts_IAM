@@ -2,7 +2,7 @@ package com.guts.Guts_IAM.auth.controller;
 
 
 import com.guts.Guts_IAM.auth.dto.ForgotPasswordRequest;
-import com.guts.Guts_IAM.service.PasswordAuthService;
+import com.guts.Guts_IAM.auth.service.PasswordAuthService;
 import com.guts.Guts_IAM.auth.dto.ResetPasswordRequest;
 import com.guts.Guts_IAM.common.response.ApiResponse;
 import jakarta.validation.Valid;
@@ -36,7 +36,7 @@ public class CredentialsController {
 
 
     @PostMapping("/reset-password")
-    public ResponseEntity<ApiResponse<Void>> resetPassword( @Valid @RequestBody ResetPasswordRequest request){
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request){
         passwordAuthService.resetPassword(request);
 
         ApiResponse<Void> apiResponse=new ApiResponse<>(

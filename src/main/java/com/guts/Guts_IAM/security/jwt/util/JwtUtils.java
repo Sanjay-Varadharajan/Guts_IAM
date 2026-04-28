@@ -1,6 +1,5 @@
 package com.guts.Guts_IAM.security.jwt.util;
 
-
 import com.guts.Guts_IAM.user.model.User;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -17,39 +16,42 @@ import java.util.List;
 public class JwtUtils {
 
     private final Key key;
-    private final long ACCESS_TOKEN_EXPIRY=15*60*1000; //15 minutes fucker
-    private final long REFRESH_TOKEN_EXPIRY=7*24*60*60*1000L; //7 days
 
-    public JwtUtils(@Value("${jwt.secret}")String secret){
-        this.key= Keys.hmacShaKeyFor(Base64.getDecoder().decode(secret));
+    private static final long ACCESS_TOKEN_EXPIRY = 15 * 60 * 1000; // 15 min
+    private static final long REFRESH_TOKEN_EXPIRY = 7 * 24 * 60 * 60 * 1000L; // 7 days
+
+    public JwtUtils(@Value("${jwt.secret}") String secret) {
+        this.key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secret));
     }
+
 
     public String generateAccessToken(User user) {
         return Jwts.builder()
                 .setSubject(user.getUserMail())
-                .claim("roles", user.getRoles().stream().map(role->role.getName()).toList())
+                .claim("roles",
+                        user.getRoles()==null
+                                ?List.of()
+                                :user.getRoles()
+                                .stream()
+                                .map(role -> role.getName())
+                                .toList())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis()+ACCESS_TOKEN_EXPIRY))
+                .setExpiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRY))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-        public String generateRefreshToken(User user){
-            return Jwts.builder()
-                    .setSubject(user.getUserMail())
-                    .setIssuedAt(new Date())
-                    .setExpiration(new Date(System.currentTimeMillis()+REFRESH_TOKEN_EXPIRY))
-                    .signWith(key,SignatureAlgorithm.HS256)
-                    .compact();
+    public String generateRefreshToken(User user) {
+        return Jwts.builder()
+                .setSubject(user.getUserMail())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRY))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
     }
 
-    public Integer getUserIdFromToken(String token){
-        return Integer.parseInt(Jwts.parserBuilder().setSigningKey(key).build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject());
-    }
-    public String getUsernameFromToken(String token){
+
+    public String getUsernameFromToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
@@ -58,19 +60,25 @@ public class JwtUtils {
                 .getSubject();
     }
 
-    public List<String> getRolesFromToken(String token){
-        return Jwts.parserBuilder().setSigningKey(key).build()
+
+    public List<String> getRolesFromToken(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
                 .parseClaimsJws(token)
                 .getBody()
-                .get("roles",List.class);
+                .get("roles", List.class);
     }
 
-
-    public boolean validateToken(String token){
+    public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token);
             return true;
-        }catch (Exception e){
+        } catch (Exception e) {
+            System.err.println("JWT validation failed: " + e.getMessage());
             return false;
         }
     }
@@ -78,5 +86,4 @@ public class JwtUtils {
     public long getRefreshTokenExpiry() {
         return REFRESH_TOKEN_EXPIRY;
     }
-
 }

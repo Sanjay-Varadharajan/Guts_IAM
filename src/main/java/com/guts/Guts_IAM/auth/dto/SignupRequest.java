@@ -3,6 +3,7 @@ package com.guts.Guts_IAM.auth.dto;
 
 import com.guts.Guts_IAM.user.model.User;
 import jakarta.persistence.Column;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,14 +14,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SignupRequest {
 
-    @NotEmpty(message = "userName must be filled")
+    @NotBlank(message = "userName must be filled")
     private String userName;
 
-    @NotEmpty(message = "mail is required for this action")
+    @NotBlank(message = "mail is required for this action")
     @Column(nullable = false,unique = true)
     private String userMail;
 
-    @NotEmpty(message = "password is required")
+    @NotBlank(message = "password is required")
     private String userPassword;
 
     public SignupRequest(User signedUpUser) {

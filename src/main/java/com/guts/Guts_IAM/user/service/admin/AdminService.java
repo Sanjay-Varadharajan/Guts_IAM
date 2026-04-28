@@ -11,6 +11,7 @@ import com.guts.Guts_IAM.user.dto.user.UserResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,9 +34,9 @@ public class AdminService {
     private final AuditRepository auditRepository;
 
     @Transactional(readOnly = true)
-    public Page<UserResponseDto> getAllActiveUsers(Principal principal, Pageable pageable, HttpServletRequest request) {
-        User loggedInUser=userRepository.findByUserMailAndActiveTrue(principal.getName()).orElseThrow(()->
-                new UsernameNotFoundException("User with this mail "+principal.getName()+" does not exist"));
+    public Page<UserResponseDto> getAllActiveUsers(Authentication authentication, Pageable pageable, HttpServletRequest request) {
+        User loggedInUser=userRepository.findByUserMailAndActiveTrue(authentication.getName()).orElseThrow(()->
+                new UsernameNotFoundException("User with this mail "+authentication.getName()+" does not exist"));
 
 
         Set<String> allowedSort=Set.of("userCreatedOn","userMail");
@@ -65,9 +66,9 @@ public class AdminService {
     }
 
 
-    public UserResponseDto updateUserStatus(Integer userId, Principal principal, HttpServletRequest request) {
+    public UserResponseDto updateUserStatus(Integer userId, Authentication authentication, HttpServletRequest request) {
 
-        User loggedInAdmin = userRepository.findByUserMailAndActiveTrue(principal.getName())
+        User loggedInAdmin = userRepository.findByUserMailAndActiveTrue(authentication.getName())
                 .orElseThrow(() -> new UsernameNotFoundException(
                         "Admin not found"
                 ));
@@ -96,10 +97,10 @@ public class AdminService {
         return new UserResponseDto(user);
     }
 
-    public Page<AuditLogDto> getAllAuditLog(Principal principal, Pageable pageable, HttpServletRequest request) {
+    public Page<AuditLogDto> getAllAuditLog(Authentication authentication, Pageable pageable, HttpServletRequest request) {
 
-        User adminCheck=userRepository.findByUserMailAndActiveTrue(principal.getName()).
-                orElseThrow(()->new UsernameNotFoundException("User with this "+principal.getName()+" does not Exists"));
+        User adminCheck=userRepository.findByUserMailAndActiveTrue(authentication.getName()).
+                orElseThrow(()->new UsernameNotFoundException("User with this "+authentication.getName()+" does not Exists"));
 
         Set<String> allowedSort=Set.of("auditedOn");
 
@@ -128,9 +129,9 @@ public class AdminService {
         return auditLogs.map(AuditLogDto::new);
     }
 
-    public UserResponseDto viewProfile(Principal principal, HttpServletRequest request) {
+    public UserResponseDto viewProfile(Authentication authentication, HttpServletRequest request) {
 
-        User userExisting=userRepository.findByUserMailAndActiveTrue(principal.getName()).orElseThrow(
+        User userExisting=userRepository.findByUserMailAndActiveTrue(authentication.getName()).orElseThrow(
                 ()->new UsernameNotFoundException("Login and Try Again")
         );
 
@@ -150,10 +151,10 @@ public class AdminService {
         return userResponseDto;
     }
 
-    public UserResponseDto updateProfile(AdminRequestDto adminRequestDto, Principal principal, HttpServletRequest request) {
+    public UserResponseDto updateProfile(AdminRequestDto adminRequestDto, Authentication authentication, HttpServletRequest request) {
 
-        User userExisting=userRepository.findByUserMailAndActiveTrue(principal.getName()).orElseThrow(
-                ()->new UsernameNotFoundException(principal.getName()+" not found ,Login and try")
+        User userExisting=userRepository.findByUserMailAndActiveTrue(authentication.getName()).orElseThrow(
+                ()->new UsernameNotFoundException(authentication.getName()+" not found ,Login and try")
         );
 
         if(adminRequestDto.getAdminName()!=null){

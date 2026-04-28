@@ -1,7 +1,8 @@
-package com.guts.Guts_IAM.auth.controller;
+package com.guts.Guts_IAM.controller;
 
+import com.guts.Guts_IAM.auth.controller.AccountUnlockController;
 import com.guts.Guts_IAM.security.jwt.dto.JwtResponse;
-import com.guts.Guts_IAM.service.UnlockAccountService;
+import com.guts.Guts_IAM.auth.service.UnlockAccountService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;

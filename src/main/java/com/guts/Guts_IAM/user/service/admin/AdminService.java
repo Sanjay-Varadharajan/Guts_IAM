@@ -2,6 +2,7 @@ package com.guts.Guts_IAM.user.service.admin;
 
 
 import com.guts.Guts_IAM.auditlog.model.AuditLog;
+import com.guts.Guts_IAM.common.exception.types.UserNameNotFoundException;
 import com.guts.Guts_IAM.user.model.User;
 import com.guts.Guts_IAM.auditlog.repository.AuditRepository;
 import com.guts.Guts_IAM.user.repository.UserRepository;
@@ -12,8 +13,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
+
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -35,11 +36,11 @@ public class AdminService {
 
     @Transactional(readOnly = true)
     public Page<UserResponseDto> getAllActiveUsers(Authentication authentication, Pageable pageable, HttpServletRequest request) {
-        User loggedInUser=userRepository.findByUserMailAndActiveTrue(authentication.getName()).orElseThrow(()->
-                new UsernameNotFoundException("User with this mail "+authentication.getName()+" does not exist"));
+        User loggedInUser=userRepository.findByUserMailAndActiveTrue(authentication.getName()).orElseThrow(
+                ()->new UserNameNotFoundException(authentication.getName()+"Not found","NOT_FOUND",HttpStatus.NOT_FOUND)
+        );
 
-
-        Set<String> allowedSort=Set.of("userCreatedOn","userMail");
+                Set<String> allowedSort=Set.of("userCreatedOn","userMail");
 
         pageable.getSort().forEach(order ->
         {
@@ -69,13 +70,13 @@ public class AdminService {
     public UserResponseDto updateUserStatus(Integer userId, Authentication authentication, HttpServletRequest request) {
 
         User loggedInAdmin = userRepository.findByUserMailAndActiveTrue(authentication.getName())
-                .orElseThrow(() -> new UsernameNotFoundException(
-                        "Admin not found"
-                ));
+                .orElseThrow(
+                        ()->new UserNameNotFoundException(authentication.getName()+"Not found","NOT_FOUND",HttpStatus.NOT_FOUND)
+                );
 
-        User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException(
-                "User not found"
-        ));
+                        User user = userRepository.findById(userId).orElseThrow((                ()->new UserNameNotFoundException(authentication.getName()+"Not found","NOT_FOUND",HttpStatus.NOT_FOUND)
+
+                        ));
 
         if (loggedInAdmin.getUserId().equals(userId)) {
             throw new IllegalArgumentException("You cannot change your own status");
@@ -100,9 +101,10 @@ public class AdminService {
     public Page<AuditLogDto> getAllAuditLog(Authentication authentication, Pageable pageable, HttpServletRequest request) {
 
         User adminCheck=userRepository.findByUserMailAndActiveTrue(authentication.getName()).
-                orElseThrow(()->new UsernameNotFoundException("User with this "+authentication.getName()+" does not Exists"));
+                orElseThrow(()->new UserNameNotFoundException(authentication.getName()+"Not found","NOT_FOUND",HttpStatus.NOT_FOUND)
+                );
 
-        Set<String> allowedSort=Set.of("auditedOn");
+                        Set<String> allowedSort=Set.of("auditedOn");
 
         pageable.getSort().forEach(order -> {
             if (!allowedSort.contains(order.getProperty())){
@@ -132,7 +134,7 @@ public class AdminService {
     public UserResponseDto viewProfile(Authentication authentication, HttpServletRequest request) {
 
         User userExisting=userRepository.findByUserMailAndActiveTrue(authentication.getName()).orElseThrow(
-                ()->new UsernameNotFoundException("Login and Try Again")
+                ()->new UserNameNotFoundException(authentication.getName()+"Not found","NOT_FOUND",HttpStatus.NOT_FOUND)
         );
 
         UserResponseDto userResponseDto=new UserResponseDto(userExisting);
@@ -154,7 +156,8 @@ public class AdminService {
     public UserResponseDto updateProfile(AdminRequestDto adminRequestDto, Authentication authentication, HttpServletRequest request) {
 
         User userExisting=userRepository.findByUserMailAndActiveTrue(authentication.getName()).orElseThrow(
-                ()->new UsernameNotFoundException(authentication.getName()+" not found ,Login and try")
+                ()->new UserNameNotFoundException(authentication.getName()+"Not found","NOT_FOUND",HttpStatus.NOT_FOUND)
+
         );
 
         if(adminRequestDto.getAdminName()!=null){

@@ -1,6 +1,7 @@
 package com.guts.Guts_IAM.auth.service;
 
 import com.guts.Guts_IAM.auth.dto.LoginRequest;
+import com.guts.Guts_IAM.common.exception.types.AccountLockedException;
 import com.guts.Guts_IAM.common.exception.types.ResourceNotFoundException;
 import com.guts.Guts_IAM.token.audit.TokenAudit;
 import com.guts.Guts_IAM.auditlog.model.AuditLog;
@@ -19,7 +20,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,10 +48,10 @@ public class AuthService {
     public JwtResponse login(LoginRequest loginRequest, HttpServletRequest request) {
 
         User user = userRepository.findByUserMailAndActiveTrue(loginRequest.getUserMail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("user not found","NOT_FOUND",HttpStatus.NOT_FOUND));
 
         if (!user.isAccountNonLocked()) {
-            throw new RuntimeException("Account is locked. Please unlock using OTP.");
+            throw new AccountLockedException("Account is locked. Please unlock using OTP.","ACCOUNT_LOCKED",HttpStatus.LOCKED);
         }
 
         try {
@@ -82,7 +85,7 @@ public class AuthService {
                         "Account locked after 3 failed attempts. Please unlock via email."
                 );
             } else {
-                throw new RuntimeException(
+                throw new BadCredentialsException(
                         "Invalid credentials. Attempt " + attempts + "/3"
                 );
             }
@@ -130,6 +133,7 @@ public class AuthService {
     public void logout(String refreshTokenStr, HttpServletRequest httpServletRequest) {
         Optional<RefreshToken>  refreshTokenCheck=refreshTokenRepository.findByToken(refreshTokenStr);
 
+
         if(refreshTokenCheck.isEmpty()){
             throw new ResourceNotFoundException(
                     "Refresh Token Not Found",
@@ -159,6 +163,7 @@ public class AuthService {
         auditLog.setUserAgent(httpServletRequest.getHeader("User-Agent"));
 
         auditRepo.save(auditLog);
+
         refreshTokenRepository.deleteByToken(refreshTokenStr);
     }
 

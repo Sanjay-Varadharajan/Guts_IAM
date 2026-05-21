@@ -20,6 +20,7 @@
     @NoArgsConstructor
     @Data
     @EntityListeners(AuditingEntityListener.class)
+    @Table(name = "users")
     public class User {
     
         @Id

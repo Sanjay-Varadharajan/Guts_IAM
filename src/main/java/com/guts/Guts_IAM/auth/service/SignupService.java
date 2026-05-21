@@ -2,6 +2,7 @@ package com.guts.Guts_IAM.auth.service;
 
 
 import com.guts.Guts_IAM.auth.dto.SignupRequest;
+import com.guts.Guts_IAM.common.exception.types.ResourceNotFoundException;
 import com.guts.Guts_IAM.role.enums.Roles;
 import com.guts.Guts_IAM.common.exception.types.ConflictException;
 import com.guts.Guts_IAM.auditlog.model.AuditLog;
@@ -49,7 +50,7 @@ public class SignupService {
         user.setUserMail(signUpRequest.getUserMail());
         user.setUserPassword(bCryptPasswordEncoder.encode(signUpRequest.getUserPassword()));
         Role userRole = roleRepository.findByName(Roles.ROLE_USER)
-                .orElseThrow(() -> new RuntimeException("Role not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found","NOT_FOUND",HttpStatus.NOT_FOUND));
 
 
         Set<Role> roles = new HashSet<>();

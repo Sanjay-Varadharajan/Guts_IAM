@@ -2,6 +2,7 @@
 
     import com.guts.Guts_IAM.auditlog.model.AuditLog;
     import com.guts.Guts_IAM.auditlog.repository.AuditRepository;
+    import com.guts.Guts_IAM.common.exception.types.TokenNotFoundException;
     import com.guts.Guts_IAM.security.util.hashutil.HashUtil;
     import com.guts.Guts_IAM.security.jwt.dto.JwtResponse;
     import com.guts.Guts_IAM.security.jwt.util.JwtUtils;
@@ -32,7 +33,7 @@
 
         public JwtResponse refreshAccessToken(String refreshTokenStr, HttpServletRequest httpServletRequest) {
             RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenStr)
-                    .orElseThrow(() -> new RuntimeException("Refresh token not found"));
+                    .orElseThrow(() -> new TokenNotFoundException("Refresh token not found","NOT_FOUND",HttpStatus.NOT_FOUND));
 
             if (refreshToken.getExpiryDate().before(Date.from(Instant.now()))) {
                 refreshTokenRepository.delete(refreshToken);

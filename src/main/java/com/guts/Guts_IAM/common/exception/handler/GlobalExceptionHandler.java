@@ -159,9 +159,56 @@
             }
 
             @ExceptionHandler(InvalidCredentialsException.class)
-            public ResponseEntity<?> handleInvalidCredentials(InvalidCredentialsException ex) {
-                return ResponseEntity
-                        .status(HttpStatus.UNAUTHORIZED)
-                        .body(ex.getMessage());
+            public ResponseEntity<?> handleInvalidCredentials(InvalidCredentialsException ex,HttpServletRequest request) {
+                Map<String,String> exceptionBody = new HashMap<>();
+                exceptionBody.put("Exception", ex.getClass().getSimpleName());
+
+                ApiErrorResponse response = new ApiErrorResponse(
+                        ex.getMessage(),
+                        HttpStatus.UNAUTHORIZED,
+                        "INVALID_CREDENTIALS",
+                        exceptionBody,
+                        LocalDateTime.now(),
+                        request.getRequestURI()
+                );
+
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
+
+
+            @ExceptionHandler(AccountLockedException.class)
+            public ResponseEntity<?> handleAccountLockedException(AccountLockedException ex,HttpServletRequest request) {
+                Map<String,String> exceptionBody = new HashMap<>();
+                exceptionBody.put("Exception", ex.getClass().getSimpleName());
+
+                ApiErrorResponse response = new ApiErrorResponse(
+                        ex.getMessage(),
+                        HttpStatus.LOCKED,
+                        "ACCOUNT_LOCKED",
+                        exceptionBody,
+                        LocalDateTime.now(),
+                        request.getRequestURI()
+                );
+
+                return ResponseEntity.status(HttpStatus.LOCKED).body(response);
+            }
+
+            @ExceptionHandler(UserNameNotFoundException.class)
+            public ResponseEntity<?> handleUserNameNotFoundException(UserNameNotFoundException ex,HttpServletRequest request) {
+                Map<String,String> exceptionBody = new HashMap<>();
+                exceptionBody.put("Exception", ex.getClass().getSimpleName());
+
+                ApiErrorResponse response = new ApiErrorResponse(
+                        ex.getMessage(),
+                        HttpStatus.NOT_FOUND,
+                        "USERNAME_NOT_FOUND",
+                        exceptionBody,
+                        LocalDateTime.now(),
+                        request.getRequestURI()
+                );
+
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
+
         }

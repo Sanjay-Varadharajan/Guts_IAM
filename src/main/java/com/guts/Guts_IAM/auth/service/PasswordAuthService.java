@@ -4,11 +4,14 @@ import com.guts.Guts_IAM.auth.dto.ForgotPasswordRequest;
 import com.guts.Guts_IAM.auth.model.PasswordResetOtp;
 import com.guts.Guts_IAM.auth.repository.PasswordResetOtpRepository;
 import com.guts.Guts_IAM.auth.dto.ResetPasswordRequest;
+import com.guts.Guts_IAM.common.exception.types.TokenNotFoundException;
+import com.guts.Guts_IAM.common.exception.types.UserNameNotFoundException;
 import com.guts.Guts_IAM.common.mail.EmailService;
 import com.guts.Guts_IAM.user.model.User;
 import com.guts.Guts_IAM.user.repository.UserRepository;
 import com.guts.Guts_IAM.common.util.OtpUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -30,9 +33,10 @@ public class PasswordAuthService {
     public void forgotPassword(ForgotPasswordRequest req) {
 
         User user = userRepository.findByUserMailAndActiveTrue(req.eMail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(()->new UserNameNotFoundException("UserName Not found","NOT_FOUND", HttpStatus.NOT_FOUND)
+                );
 
-        PasswordResetOtp existing = otpRepository.findById(req.eMail()).orElse(null);
+                        PasswordResetOtp existing = otpRepository.findById(req.eMail()).orElse(null);
 
         if (existing != null && existing.getLastRequestedAt() != null &&
                 existing.getLastRequestedAt().plusSeconds(30).isAfter(LocalDateTime.now())) {
@@ -56,7 +60,8 @@ public class PasswordAuthService {
     public void resetPassword(ResetPasswordRequest req) {
 
         PasswordResetOtp data = otpRepository.findById(req.email())
-                .orElseThrow(() -> new RuntimeException("OTP not found"));
+                .orElseThrow(() -> new TokenNotFoundException("Otp not found","NOT_FOUND",HttpStatus.NOT_FOUND)
+                );
 
         if (data.getExpiryTime().isBefore(LocalDateTime.now())) {
             otpRepository.deleteById(req.email());

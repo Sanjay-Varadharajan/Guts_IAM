@@ -2,6 +2,8 @@ package com.guts.Guts_IAM.auth.service;
 
 import com.guts.Guts_IAM.auth.model.AccountUnlockOtp;
 import com.guts.Guts_IAM.auth.repository.AccountUnlockRepository;
+import com.guts.Guts_IAM.common.exception.types.ResourceNotFoundException;
+import com.guts.Guts_IAM.common.exception.types.UserNameNotFoundException;
 import com.guts.Guts_IAM.common.mail.EmailService;
 import com.guts.Guts_IAM.token.refreshtoken.model.RefreshToken;
 import com.guts.Guts_IAM.user.model.User;
@@ -11,6 +13,9 @@ import com.guts.Guts_IAM.security.jwt.dto.JwtResponse;
 import com.guts.Guts_IAM.common.util.OtpUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.LockedException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -32,10 +37,10 @@ public class UnlockAccountService {
     public void sendUnlockOtp(String email) {
 
         User user = userRepository.findByUserMailAndActiveTrue(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         if (user.isAccountNonLocked()) {
-            throw new RuntimeException("Account is not locked");
+            throw new LockedException("Account is not locked");
         }
 
         AccountUnlockOtp existing = accountUnlockRepository.findById(email).orElse(null);
@@ -43,7 +48,12 @@ public class UnlockAccountService {
         if (existing != null &&
                 existing.getLastRequestedAt() != null &&
                 existing.getLastRequestedAt().plusSeconds(30).isAfter(LocalDateTime.now())) {
-            throw new RuntimeException("Wait before requesting again");
+
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.TOO_MANY_REQUESTS,
+                    "Please wait before requesting OTP again"
+            );
+
         }
 
         String otp = OtpUtil.generateOtp(OTP_LENGTH);
@@ -65,30 +75,33 @@ public class UnlockAccountService {
                                           HttpServletRequest request) {
 
         AccountUnlockOtp data = accountUnlockRepository.findById(email)
-                .orElseThrow(() -> new RuntimeException("OTP not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("OTP not found","NOT_FOUND", HttpStatus.NOT_FOUND));
 
         if (data.getExpiryTime().isBefore(LocalDateTime.now())) {
             accountUnlockRepository.deleteById(email);
-            throw new RuntimeException("OTP expired");
+            throw new org.springframework.security.authentication.CredentialsExpiredException("OTP expired");
         }
 
         if (data.getUnlockAttempts() >= 3) {
             accountUnlockRepository.deleteById(email);
-            throw new RuntimeException("Too many attempts");
+            throw new org.springframework.security.authentication.LockedException("Too many OTP attempts");
         }
 
         if (!passwordEncoder.matches(otpInput, data.getOtpHash())) {
             int attempts = data.getUnlockAttempts() + 1;
             data.setUnlockAttempts(attempts);
             accountUnlockRepository.save(data);
-            System.out.println("Failed OTP attempt: " + attempts + " for " + email); // <- debug
-            throw new RuntimeException("Invalid OTP. Attempt " + attempts + "/3");
+            System.out.println("Failed OTP attempt: " + attempts + " for " + email);
+            throw new org.springframework.security.authentication.BadCredentialsException(
+                    "Invalid OTP. Attempt " + attempts + "/3"
+            );
         }
 
         User user = userRepository.findByUserMailAndActiveTrue(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(()->new UserNameNotFoundException(email+"Not found","NOT_FOUND",HttpStatus.NOT_FOUND)
+                );
 
-        user.setAccountNonLocked(true);
+                        user.setAccountNonLocked(true);
         user.setFailedAttempts(0);
         user.setLockTime(null);
 

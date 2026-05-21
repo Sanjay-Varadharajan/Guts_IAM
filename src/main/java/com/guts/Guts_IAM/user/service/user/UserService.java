@@ -13,7 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import com.guts.Guts_IAM.common.exception.types.UserNameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -32,7 +32,7 @@ public class UserService {
     public UserResponseDto viewProfile(Authentication authentication, HttpServletRequest request) {
 
         User userExisting=userRepository.findByUserMailAndActiveTrue(authentication.getName()).orElseThrow(
-                ()->new UsernameNotFoundException("Login and Try Again")
+                ()->new UserNameNotFoundException(authentication.getName()+"Not found","NOT_FOUND",HttpStatus.NOT_FOUND)
         );
 
         UserResponseDto userResponseDto=new UserResponseDto(userExisting);
@@ -55,7 +55,7 @@ public class UserService {
     public UserResponseDto updateProfile(UserRequestDto userRequestDto, Authentication authentication, HttpServletRequest request) {
 
         User userExisting=userRepository.findByUserMailAndActiveTrue(authentication.getName()).orElseThrow(
-                ()->new UsernameNotFoundException(authentication.getName()+" not found ,Login and try")
+                ()->new UserNameNotFoundException(authentication.getName()+"Not found","NOT_FOUND",HttpStatus.NOT_FOUND)
         );
 
         if(userRequestDto.getUserName()!=null){
@@ -82,11 +82,13 @@ public class UserService {
     public Page<AuditLogDtoForUser> viewLogs(Authentication authentication, Pageable pageable, HttpServletRequest request) {
 
         User user=userRepository.findByUserMailAndActiveTrue(authentication.getName()).orElseThrow(
-                ()->new UsernameNotFoundException("User not Found,Login and try"));
+                ()->new UserNameNotFoundException(authentication.getName()+"Not found","NOT_FOUND",HttpStatus.NOT_FOUND)
+        );
 
 
 
-        Set<String> allowedSort=Set.of("auditedOn");
+
+                Set<String> allowedSort=Set.of("auditedOn");
 
         pageable.getSort().forEach(order -> {
             if (!allowedSort.contains(order.getProperty())){

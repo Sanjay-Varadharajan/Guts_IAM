@@ -3,6 +3,10 @@ package com.guts.Guts_IAM.user.service.admin;
 
 import com.guts.Guts_IAM.auditlog.model.AuditLog;
 import com.guts.Guts_IAM.common.exception.types.UserNameNotFoundException;
+import com.guts.Guts_IAM.role.dto.RoleRequestDto;
+import com.guts.Guts_IAM.role.dto.RoleResponseDto;
+import com.guts.Guts_IAM.role.model.Role;
+import com.guts.Guts_IAM.role.repository.RoleRepository;
 import com.guts.Guts_IAM.user.model.User;
 import com.guts.Guts_IAM.auditlog.repository.AuditRepository;
 import com.guts.Guts_IAM.user.repository.UserRepository;
@@ -33,6 +37,8 @@ public class AdminService {
     private final UserRepository userRepository;
 
     private final AuditRepository auditRepository;
+
+    private final RoleRepository roleRepository;
 
     @Transactional(readOnly = true)
     public Page<UserResponseDto> getAllActiveUsers(Authentication authentication, Pageable pageable, HttpServletRequest request) {
@@ -179,5 +185,34 @@ public class AdminService {
         auditRepository.save(auditLog);
 
         return userResponseDto;
+    }
+
+
+    public RoleResponseDto addRoles(RoleRequestDto dto, HttpServletRequest httpServletRequest, Authentication authentication) {
+
+        User admin=userRepository.findByUserMailAndActiveTrue(authentication.getName()).orElseThrow(
+                ()->new UserNameNotFoundException(
+                        "admin not found",
+                "NOT_FOUND",
+                HttpStatus.NOT_FOUND
+        ));
+
+        Role role=new Role();
+        role.setName(dto.getRoleName());
+        roleRepository.save(role);
+
+        RoleResponseDto responseDto=new RoleResponseDto(role);
+
+        AuditLog auditLog=new AuditLog();
+        auditLog.setRoleName(admin.getRoles().toString());
+        auditLog.setUserAgent(httpServletRequest.getHeader("User-Agent"));
+        auditLog.setLogAction("PROFILE_UPDATED");
+        auditLog.setResource("UPDATE");
+        auditLog.setIpAddress(httpServletRequest.getRemoteAddr());
+        auditLog.setUserMail(admin.getUserMail());
+        auditLog.setResourceId(admin.getUserId().toString());
+        auditRepository.save(auditLog);
+
+        return responseDto;
     }
 }

@@ -2,6 +2,9 @@ package com.guts.Guts_IAM.user.controller.admin;
 
 
 import com.guts.Guts_IAM.common.response.ApiResponse;
+import com.guts.Guts_IAM.role.dto.RoleRequestDto;
+import com.guts.Guts_IAM.role.dto.RoleResponseDto;
+import com.guts.Guts_IAM.role.model.Role;
 import com.guts.Guts_IAM.user.dto.admin.AdminRequestDto;
 import com.guts.Guts_IAM.auditlog.dto.AuditLogDto;
 import com.guts.Guts_IAM.user.dto.user.UserResponseDto;
@@ -122,5 +125,21 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
     }
 
+    @PostMapping("/role/add")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<RoleResponseDto>> addRoles(@RequestBody RoleRequestDto dto, HttpServletRequest httpServletRequest, Authentication authentication){
+
+        RoleResponseDto postResponse=adminService.addRoles(dto,httpServletRequest,authentication);
+
+
+        ApiResponse apiResponse=new ApiResponse<>(
+                true,
+                dto.getRoleName()+"ROLE_ADDED",
+                postResponse,
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(apiResponse);
+    }
 
 }

@@ -29,6 +29,33 @@ public class EmailService {
         javaMailSender.send(simpleMailMessage);
     }
 
+    public void sendVerificationEmail(
+            String toEmail,
+            String token
+    ) {
+
+        String verificationLink =
+                "http://localhost:8080/api/auth/verify-email?token="
+                        + token;
+
+        SimpleMailMessage simpleMailMessage =
+                new SimpleMailMessage();
+
+        simpleMailMessage.setTo(toEmail);
+
+        simpleMailMessage.setSubject(
+                "Guts IAM - Email Verification"
+        );
+
+        simpleMailMessage.setText(
+                "Click the link below to verify your email:\n\n"
+                        + verificationLink
+                        + "\n\nValid for 15 minutes."
+        );
+
+        javaMailSender.send(simpleMailMessage);
+    }
+
 
     }
 

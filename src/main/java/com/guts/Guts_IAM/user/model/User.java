@@ -29,7 +29,9 @@
     
         @NotEmpty(message = "name cannot be empty")
         private String userName;
-    
+
+
+
         @NotEmpty(message = "this action requires mail")
         @Email
         @Column(nullable = false,unique = true)
@@ -47,7 +49,15 @@
         )
         private Set<Role> roles;
 
-        private boolean active=true;
+        private boolean active=false;
+
+        @Column(nullable = false)
+        private boolean emailVerified = false;
+
+        private String verificationToken;
+
+        private LocalDateTime verificationTokenExpiry;
+
 
         @Column(nullable = false)
         private int tokenVersion = 0;

@@ -5,28 +5,27 @@ import com.guts.Guts_IAM.auditlog.repository.AuditRepository;
 import com.guts.Guts_IAM.auth.dto.SignupRequest;
 import com.guts.Guts_IAM.auth.service.SignupService;
 import com.guts.Guts_IAM.common.exception.types.ConflictException;
-import com.guts.Guts_IAM.role.enums.Roles;
-import com.guts.Guts_IAM.role.model.Role;
-import com.guts.Guts_IAM.role.repository.RoleRepository;
+import com.guts.Guts_IAM.common.mail.EmailService;
+import com.guts.Guts_IAM.common.response.ApiResponse;
 import com.guts.Guts_IAM.user.model.User;
 import com.guts.Guts_IAM.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import org.mockito.ArgumentCaptor;
-
 
 public class SignUpTest {
 
@@ -40,80 +39,175 @@ public class SignUpTest {
     private AuditRepository auditRepository;
 
     @Mock
-    private RoleRepository roleRepository;
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @Mock
+    private ValueOperations<String, Object> valueOperations;
+
+    @Mock
+    private EmailService emailService;
 
     @InjectMocks
     private SignupService signupService;
 
     @BeforeEach
     void setUp() {
+
         MockitoAnnotations.openMocks(this);
+
+        when(redisTemplate.opsForValue())
+                .thenReturn(valueOperations);
     }
 
     @Test
-    public void signupTest(){
+    public void signupTest() {
 
-        User user=new User();
-        user.setUserName("sanjay");
-        user.setUserMail("sanjay@gmail.com");
-        user.setUserPassword("123456");
+        SignupRequest signupRequest =
+                new SignupRequest();
 
+        signupRequest.setUserName("sanjay");
 
-        SignupRequest signupRequest=new SignupRequest(user);
+        signupRequest.setUserMail(
+                "sanjay@gmail.com"
+        );
 
-        when(userRepository.findByUserMailAndActiveTrue("sanjay@gmail.com"))
-                .thenReturn(Optional.empty());
+        signupRequest.setUserPassword(
+                "123456"
+        );
 
-        when(bCryptPasswordEncoder.encode("123456")).thenReturn("123456");
+        when(
+                userRepository.findByUserMailAndActiveTrue(
+                        "sanjay@gmail.com"
+                )
+        ).thenReturn(Optional.empty());
 
-        Role role=new Role();
-        when(roleRepository.findByName(Roles.ROLE_USER)).thenReturn(Optional.of(role));
+        when(
+                bCryptPasswordEncoder.encode(
+                        "123456"
+                )
+        ).thenReturn("hashedPassword");
 
-        when(userRepository.save(any(User.class)))
-                .thenAnswer(invocation -> {
-                    User u = invocation.getArgument(0);
-                    u.setUserId(1);
-                    return u;
-                });
+        HttpServletRequest httpServletRequest =
+                mock(HttpServletRequest.class);
 
-        HttpServletRequest httpServletRequest=mock(HttpServletRequest.class);
+        when(
+                httpServletRequest.getRemoteAddr()
+        ).thenReturn("127.0.0.1");
 
-        when(httpServletRequest.getRemoteAddr()).thenReturn("127.0.0.1");
-        when(httpServletRequest.getHeader("User-Agent")).thenReturn("JUnit");
+        when(
+                httpServletRequest.getHeader(
+                        "User-Agent"
+                )
+        ).thenReturn("JUnit");
 
-        SignupRequest result = signupService.signup(signupRequest, httpServletRequest);
+        ApiResponse result =
+                signupService.signup(
+                        signupRequest,
+                        httpServletRequest
+                );
+
         assertNotNull(result);
-        assertEquals("sanjay@gmail.com", result.getUserMail());
 
-        verify(userRepository, times(1)).save(any(User.class));
-        ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
+        assertEquals(
+                true,
+                result.isResponseSuccess()
+        );
 
-        verify(auditRepository).save(captor.capture());
+        assertEquals(
+                "Verification email sent successfully",
+                result.getResponseMessage()
+        );
 
-        AuditLog log = captor.getValue();
+        verify(bCryptPasswordEncoder)
+                .encode("123456");
 
-        verify(bCryptPasswordEncoder).encode("123456");
-        assertEquals("SIGN_UP", log.getLogAction());
-        assertEquals("sanjay@gmail.com", log.getUserMail());
-        assertEquals("AUTH", log.getResource());
-        assertEquals("127.0.0.1", log.getIpAddress());
-        assertEquals("JUnit", log.getUserAgent());}
+        verify(valueOperations, times(1))
+                .set(
+                        startsWith("signup:"),
+                        any(),
+                        any()
+                );
+
+        verify(emailService, times(1))
+                .sendVerificationEmail(
+                        eq("sanjay@gmail.com"),
+                        anyString()
+                );
+
+        ArgumentCaptor<AuditLog> captor =
+                ArgumentCaptor.forClass(
+                        AuditLog.class
+                );
+
+        verify(auditRepository)
+                .save(captor.capture());
+
+        AuditLog log =
+                captor.getValue();
+
+        assertEquals(
+                "SIGN_UP_PENDING",
+                log.getLogAction()
+        );
+
+        assertEquals(
+                "sanjay@gmail.com",
+                log.getUserMail()
+        );
+
+        assertEquals(
+                "AUTH",
+                log.getResource()
+        );
+
+        assertEquals(
+                "127.0.0.1",
+                log.getIpAddress()
+        );
+
+        assertEquals(
+                "JUnit",
+                log.getUserAgent()
+        );
+
+        verify(userRepository, never())
+                .save(any(User.class));
+    }
 
     @Test
     public void signupTest_userAlreadyExists() {
 
-        SignupRequest request = new SignupRequest();
-        request.setUserMail("sanjay@gmail.com");
+        SignupRequest request =
+                new SignupRequest();
 
-        when(userRepository.findByUserMailAndActiveTrue("sanjay@gmail.com"))
-                .thenReturn(Optional.of(new User()));
+        request.setUserMail(
+                "sanjay@gmail.com"
+        );
 
-        HttpServletRequest httpRequest = mock(HttpServletRequest.class);
+        when(
+                userRepository.findByUserMailAndActiveTrue(
+                        "sanjay@gmail.com"
+                )
+        ).thenReturn(Optional.of(new User()));
 
-        assertThrows(ConflictException.class, () -> {
-            signupService.signup(request, httpRequest);
-        });
+        HttpServletRequest httpRequest =
+                mock(HttpServletRequest.class);
 
-        verify(userRepository, never()).save(any(User.class));
+        assertThrows(
+                ConflictException.class,
+                () -> signupService.signup(
+                        request,
+                        httpRequest
+                )
+        );
+
+        verify(valueOperations, never())
+                .set(any(), any(), any());
+
+        verify(emailService, never())
+                .sendVerificationEmail(
+                        anyString(),
+                        anyString()
+                );
     }
 }

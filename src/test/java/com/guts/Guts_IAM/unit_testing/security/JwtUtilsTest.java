@@ -1,6 +1,5 @@
 package com.guts.Guts_IAM.unit_testing.security;
 
-import com.guts.Guts_IAM.role.enums.Roles;
 import com.guts.Guts_IAM.role.model.Role;
 import com.guts.Guts_IAM.security.jwt.util.JwtUtils;
 import com.guts.Guts_IAM.user.model.User;
@@ -40,7 +39,7 @@ class JwtUtilsTest {
     void shouldGenerateAccessToken() {
 
         Role role = mock(Role.class);
-        when(role.getName()).thenReturn(Roles.ROLE_USER);
+        when(role.getName()).thenReturn("ROLE_USER");
 
         when(user.getUserMail()).thenReturn("test@mail.com");
         when(user.getRoles()).thenReturn(Set.of(role));
@@ -55,7 +54,7 @@ class JwtUtilsTest {
         // roles check (ENUM stored as string in JWT)
         List<String> roles = jwtUtils.getRolesFromToken(token);
 
-        assertTrue(roles.contains(Roles.ROLE_USER.name()));
+        assertTrue(roles.contains("ROLE_USER"));
     }
 
     // =========================
@@ -80,7 +79,7 @@ class JwtUtilsTest {
     void shouldValidateValidToken() {
 
         Role role = mock(Role.class);
-        when(role.getName()).thenReturn(Roles.ROLE_USER);
+        when(role.getName()).thenReturn("ROLE_USER");
 
         when(user.getUserMail()).thenReturn("test@mail.com");
         when(user.getRoles()).thenReturn(Set.of(role));

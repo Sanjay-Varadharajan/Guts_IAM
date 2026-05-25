@@ -3,7 +3,6 @@ package com.guts.Guts_IAM.unit_testing.service;
 import com.guts.Guts_IAM.auditlog.dto.AuditLogDtoForUser;
 import com.guts.Guts_IAM.auditlog.model.AuditLog;
 import com.guts.Guts_IAM.auditlog.repository.AuditRepository;
-import com.guts.Guts_IAM.role.enums.Roles;
 import com.guts.Guts_IAM.role.model.Role;
 import com.guts.Guts_IAM.user.dto.user.UserRequestDto;
 import com.guts.Guts_IAM.user.dto.user.UserResponseDto;
@@ -56,7 +55,7 @@ public class UserServiceTest {
         user.setUserMail("test@mail.com");
         user.setUserName("OldName");
         Role role = new Role();
-        role.setName(Roles.ROLE_USER);
+        role.setName("ROLE_USER");
         user.setRoles(Set.of(role));
     }
 

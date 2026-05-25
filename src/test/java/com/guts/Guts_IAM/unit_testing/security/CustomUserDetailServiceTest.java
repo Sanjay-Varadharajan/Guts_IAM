@@ -1,6 +1,5 @@
 package com.guts.Guts_IAM.unit_testing.security;
 
-import com.guts.Guts_IAM.role.enums.Roles;
 import com.guts.Guts_IAM.role.model.Role;
 import com.guts.Guts_IAM.security.userdetails.CustomUserDetailService;
 import com.guts.Guts_IAM.user.model.User;
@@ -33,7 +32,7 @@ class CustomUserDetailServiceTest {
 
         // Arrange
         Role role = mock(Role.class);
-        when(role.getName()).thenReturn(Roles.ROLE_USER);
+        when(role.getName()).thenReturn("ROLE_USER");
 
         User user = mock(User.class);
         when(user.getUserMail()).thenReturn("test@mail.com");

@@ -5,7 +5,6 @@ import com.guts.Guts_IAM.auditlog.service.AuditService;
 import com.guts.Guts_IAM.auth.dto.LoginRequest;
 import com.guts.Guts_IAM.auth.service.AuthService;
 import com.guts.Guts_IAM.common.exception.types.ResourceNotFoundException;
-import com.guts.Guts_IAM.role.enums.Roles;
 import com.guts.Guts_IAM.role.model.Role;
 import com.guts.Guts_IAM.security.jwt.dto.JwtResponse;
 import com.guts.Guts_IAM.security.jwt.util.JwtUtils;
@@ -71,7 +70,7 @@ public class AuthServiceTest {
         user.setAccountNonLocked(true);
         Set<Role> roles = new HashSet<>();
         Role role = new Role();
-        role.setName(Roles.ROLE_USER);
+        role.setName("ROLE_USER");
         roles.add(role);
 
         user.setRoles(roles);
@@ -116,7 +115,7 @@ public class AuthServiceTest {
         user.setFailedAttempts(0);
         Set<Role> roles = new HashSet<>();
         Role role = new Role();
-        role.setName(Roles.ROLE_USER);
+        role.setName("ROLE_USER");
         roles.add(role);
 
         user.setRoles(roles);
@@ -151,7 +150,7 @@ public class AuthServiceTest {
         user.setFailedAttempts(2);
         Set<Role> roles = new HashSet<>();
         Role role = new Role();
-        role.setName(Roles.ROLE_USER);
+        role.setName("ROLE_USER");
         roles.add(role);
 
         user.setRoles(roles);
@@ -184,7 +183,7 @@ public class AuthServiceTest {
         user.setUserMail("sanjay@gmail.com");
         Set<Role> roles = new HashSet<>();
         Role role = new Role();
-        role.setName(Roles.ROLE_USER);
+        role.setName("ROLE_USER");
         roles.add(role);
 
         user.setRoles(roles);
@@ -225,7 +224,7 @@ public class AuthServiceTest {
         user.setFailedAttempts(2);
         Set<Role> roles = new HashSet<>();
         Role role = new Role();
-        role.setName(Roles.ROLE_USER);
+        role.setName("ROLE_USER");
         roles.add(role);
 
         user.setRoles(roles);

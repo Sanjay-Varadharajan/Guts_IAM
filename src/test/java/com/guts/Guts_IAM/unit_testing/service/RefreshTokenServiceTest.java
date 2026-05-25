@@ -2,7 +2,6 @@ package com.guts.Guts_IAM.unit_testing.service;
 
 import com.guts.Guts_IAM.auditlog.model.AuditLog;
 import com.guts.Guts_IAM.auditlog.repository.AuditRepository;
-import com.guts.Guts_IAM.role.enums.Roles;
 import com.guts.Guts_IAM.role.model.Role;
 import com.guts.Guts_IAM.security.jwt.dto.JwtResponse;
 import com.guts.Guts_IAM.security.jwt.util.JwtUtils;
@@ -55,7 +54,7 @@ public class RefreshTokenServiceTest {
             user.setUserId(1);
             user.setUserMail("test@mail.com");
             Role role=new Role();
-            role.setName(Roles.ROLE_USER);
+            role.setName("ROLE_USER");
             user.setRoles(Set.of(role));
 
             refreshToken = new RefreshToken();

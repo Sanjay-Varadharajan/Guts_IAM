@@ -1,7 +1,6 @@
 package com.guts.Guts_IAM.unit_testing.service;
 
 import com.guts.Guts_IAM.auditlog.model.AuditLog;
-import com.guts.Guts_IAM.role.enums.Roles;
 import com.guts.Guts_IAM.role.model.Role;
 import com.guts.Guts_IAM.user.model.User;
 import com.guts.Guts_IAM.auditlog.repository.AuditRepository;
@@ -52,7 +51,7 @@ public class AdminServiceTest {
             adminUser.setUserId(1);
             adminUser.setUserMail("admin@mail.com");
             Role role=new Role();
-            role.setName(Roles.ROLE_USER);
+            role.setName("ROLE_USER");
             adminUser.setRoles(Set.of(role));
 
             normalUser = new User();
@@ -60,7 +59,7 @@ public class AdminServiceTest {
             normalUser.setUserMail("user@mail.com");
             normalUser.setActive(true);
             Role role1=new Role();
-            role1.setName(Roles.ROLE_USER);
+            role1.setName("ROLE_USER");
             normalUser.setRoles(Set.of(role1));
         }
 

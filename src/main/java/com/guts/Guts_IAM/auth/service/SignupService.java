@@ -8,7 +8,6 @@ import com.guts.Guts_IAM.common.exception.types.ConflictException;
 import com.guts.Guts_IAM.common.exception.types.ResourceNotFoundException;
 import com.guts.Guts_IAM.common.mail.EmailService;
 import com.guts.Guts_IAM.common.response.ApiResponse;
-import com.guts.Guts_IAM.role.enums.Roles;
 import com.guts.Guts_IAM.role.model.Role;
 import com.guts.Guts_IAM.role.repository.RoleRepository;
 import com.guts.Guts_IAM.user.model.User;
@@ -95,9 +94,9 @@ public class SignupService {
 
         AuditLog auditLog = new AuditLog();
 
-        Set<Roles> rolesSet = new HashSet<>();
+        Set<String> rolesSet = new HashSet<>();
 
-        rolesSet.add(Roles.ROLE_USER);
+        rolesSet.add("ROLE_USER");
 
         auditLog.setLogAction(
                 "SIGN_UP_PENDING"
@@ -165,7 +164,7 @@ public class SignupService {
         }
 
         Role userRole =
-                roleRepository.findByName(Roles.ROLE_USER)
+                roleRepository.findByName("ROLE_USER")
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Role not found",
@@ -211,9 +210,9 @@ public class SignupService {
 
         AuditLog auditLog = new AuditLog();
 
-        Set<Roles> rolesSet = new HashSet<>();
+        Set<String> rolesSet = new HashSet<>();
 
-        rolesSet.add(Roles.ROLE_USER);
+        rolesSet.add("ROLE_USER");
 
         auditLog.setLogAction(
                 "EMAIL_VERIFIED"

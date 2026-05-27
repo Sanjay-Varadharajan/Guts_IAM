@@ -3,6 +3,8 @@ package com.guts.Guts_IAM.security.jwt.filter;
 import com.guts.Guts_IAM.security.jwt.util.JwtUtils;
 import com.guts.Guts_IAM.security.userdetails.CustomUserDetailService;
 import com.guts.Guts_IAM.security.userdetails.CustomUserDetails;
+import com.guts.Guts_IAM.sessionmanagement.model.UserSession;
+import com.guts.Guts_IAM.sessionmanagement.repository.UserSessionRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,6 +17,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -24,6 +28,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtils jwtUtils;
 
     private final CustomUserDetailService customUserDetailService;
+
+    private final UserSessionRepository sessionRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -40,6 +46,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             try {
                 String userName = jwtUtils.getUsernameFromToken(token);
+
+                Optional<UserSession> optionalSession =
+                        sessionRepository.findByJwtToken(token);
+
+                if(optionalSession.isEmpty()) {
+                    response.sendError(401, "Session not found");
+                    return;
+                }
+
+                UserSession session = optionalSession.get();
+
+                if(session.isRevoked()) {
+                    response.sendError(401, "Session revoked");
+                    return;
+                }
+
+                session.setLastActive(LocalDateTime.now());
+
+                sessionRepository.save(session);
 
                 CustomUserDetails userDetails =
                         (CustomUserDetails) customUserDetailService.loadUserByUsername(userName);

@@ -35,6 +35,7 @@ public class CustomUserDetailService implements UserDetailsService {
                         .toList();
 
         return new CustomUserDetails(
+                user.getUserId(),
                 user.getUserMail(),
                 user.getUserPassword(),
                 user.isActive(),

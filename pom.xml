@@ -34,6 +34,13 @@
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>nl.basjes.parse.useragent</groupId>
+			<artifactId>yauaa</artifactId>
+			<version>7.30.0</version>
+		</dependency>
+
+
 		<!-- 🗄️ JPA -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

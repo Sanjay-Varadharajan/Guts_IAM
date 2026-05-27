@@ -8,6 +8,8 @@
     import jakarta.validation.Valid;
     import lombok.RequiredArgsConstructor;
     import org.springframework.http.ResponseEntity;
+    import org.springframework.security.core.Authentication;
+    import org.springframework.transaction.annotation.Transactional;
     import org.springframework.web.bind.annotation.PostMapping;
     import org.springframework.web.bind.annotation.RequestBody;
     import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +18,7 @@
     @RequestMapping("/api/auth")
     @RestController
     @RequiredArgsConstructor
+    @Transactional
     public class AuthController {
 
         private final AuthService authService;
@@ -33,4 +36,17 @@
             authService.logout(request.getRefreshToken(),httpServletRequest);
             return ResponseEntity.ok("Logged out successfully");
         }
+
+        @PostMapping("/logout-all")
+        public ResponseEntity<?> logoutAll(
+                Authentication authentication,
+                HttpServletRequest request) {
+
+            authService.logoutAll(authentication, request);
+
+            return ResponseEntity.ok(
+                    "Logged out from all devices"
+            );
+        }
+
     }

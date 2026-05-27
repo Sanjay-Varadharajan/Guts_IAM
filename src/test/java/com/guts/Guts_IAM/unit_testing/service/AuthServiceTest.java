@@ -8,6 +8,8 @@ import com.guts.Guts_IAM.common.exception.types.ResourceNotFoundException;
 import com.guts.Guts_IAM.role.model.Role;
 import com.guts.Guts_IAM.security.jwt.dto.JwtResponse;
 import com.guts.Guts_IAM.security.jwt.util.JwtUtils;
+import com.guts.Guts_IAM.sessionmanagement.repository.UserSessionRepository;
+import com.guts.Guts_IAM.sessionmanagement.service.SessionService;
 import com.guts.Guts_IAM.token.audit.TokenAuditRepository;
 import com.guts.Guts_IAM.token.refreshtoken.model.RefreshToken;
 import com.guts.Guts_IAM.token.refreshtoken.repository.RefreshTokenRepository;
@@ -16,9 +18,11 @@ import com.guts.Guts_IAM.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 
 import java.util.HashSet;
@@ -30,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 public class AuthServiceTest {
 
 
@@ -50,11 +55,14 @@ public class AuthServiceTest {
     @InjectMocks
     AuthService authService;
 
+    @Mock
+    private SessionService sessionService;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
+    @Mock
+    private UserSessionRepository userSessionRepository;
+
+
+
 
 
     @Test

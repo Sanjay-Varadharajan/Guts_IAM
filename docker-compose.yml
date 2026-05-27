@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+
+  mysql:
+    image: mysql:8
+    container_name: guts-mysql
+
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: guts
+
+    ports:
+      - "3307:3306"
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  app:
+    build: .
+    container_name: guts-iam
+
+    depends_on:
+      - mysql
+
+    ports:
+      - "8080:8080"
+
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/guts
+      DB_USERNAME: root
+      DB_PASSWORD: root
+
+volumes:
+  mysql_data:

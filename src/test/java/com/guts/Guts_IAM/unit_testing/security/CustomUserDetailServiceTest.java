@@ -39,6 +39,7 @@ class CustomUserDetailServiceTest {
         when(user.getUserPassword()).thenReturn("password123");
         when(user.isActive()).thenReturn(true);
         when(user.getRoles()).thenReturn(Set.of(role));
+        when(user.getUserId()).thenReturn(1);
 
         when(userRepository.findByUserMailAndActiveTrue("test@mail.com"))
                 .thenReturn(Optional.of(user));

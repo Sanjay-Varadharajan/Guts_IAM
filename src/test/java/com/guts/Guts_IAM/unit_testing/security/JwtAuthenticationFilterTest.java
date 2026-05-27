@@ -4,22 +4,27 @@ import com.guts.Guts_IAM.security.jwt.filter.JwtAuthenticationFilter;
 import com.guts.Guts_IAM.security.jwt.util.JwtUtils;
 import com.guts.Guts_IAM.security.userdetails.CustomUserDetailService;
 import com.guts.Guts_IAM.security.userdetails.CustomUserDetails;
+import com.guts.Guts_IAM.sessionmanagement.model.UserSession;
+import com.guts.Guts_IAM.sessionmanagement.repository.UserSessionRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Collections;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class JwtAuthenticationFilterTest {
 
     @Mock
@@ -27,6 +32,9 @@ class JwtAuthenticationFilterTest {
 
     @Mock
     private CustomUserDetailService customUserDetailService;
+
+    @Mock
+    private UserSessionRepository userSessionRepository;
 
     @Mock
     private HttpServletRequest request;
@@ -37,12 +45,14 @@ class JwtAuthenticationFilterTest {
     @Mock
     private FilterChain filterChain;
 
+    @Mock
+    private UserSession session;
+
     @InjectMocks
     private JwtAuthenticationFilter filter;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
         SecurityContextHolder.clearContext();
     }
 
@@ -62,7 +72,8 @@ class JwtAuthenticationFilterTest {
 
         CustomUserDetails userDetails = mock(CustomUserDetails.class);
 
-        when(request.getServletPath()).thenReturn("/api/user/profile");
+        when(request.getServletPath())
+                .thenReturn("/api/user/profile");
 
         when(request.getHeader("Authorization"))
                 .thenReturn("Bearer " + token);
@@ -76,15 +87,25 @@ class JwtAuthenticationFilterTest {
         when(userDetails.getAuthorities())
                 .thenReturn(Collections.emptyList());
 
-        // 🔥 THIS WAS MISSING
-        when(userDetails.getUsername()).thenReturn(username);
+        when(userDetails.getUsername())
+                .thenReturn(username);
+
+        when(userSessionRepository.findByJwtToken(token))
+                .thenReturn(Optional.of(session));
+
+        when(session.isRevoked())
+                .thenReturn(false);
 
         filter.doFilter(request, response, filterChain);
 
-        var auth = SecurityContextHolder.getContext().getAuthentication();
+        var auth = SecurityContextHolder
+                .getContext()
+                .getAuthentication();
 
         assertNotNull(auth);
+
         assertEquals(username, auth.getName());
+
         assertTrue(auth.isAuthenticated());
 
         verify(filterChain).doFilter(request, response);
@@ -104,10 +125,16 @@ class JwtAuthenticationFilterTest {
 
         filter.doFilter(request, response, filterChain);
 
-        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        assertNull(
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication()
+        );
 
         verify(filterChain).doFilter(request, response);
+
         verifyNoInteractions(jwtUtils);
+
         verifyNoInteractions(customUserDetailService);
     }
 
@@ -122,12 +149,19 @@ class JwtAuthenticationFilterTest {
         when(request.getHeader("Authorization"))
                 .thenReturn("Bearer " + token);
 
+        when(request.getServletPath())
+                .thenReturn("/api/user/profile");
+
         when(jwtUtils.getUsernameFromToken(token))
                 .thenThrow(new RuntimeException("Invalid token"));
 
         filter.doFilter(request, response, filterChain);
 
-        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        assertNull(
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication()
+        );
 
         verify(filterChain).doFilter(request, response);
     }
@@ -147,10 +181,16 @@ class JwtAuthenticationFilterTest {
         filter.doFilter(request, response, filterChain);
 
         verify(filterChain).doFilter(request, response);
+
         verifyNoInteractions(jwtUtils);
+
         verifyNoInteractions(customUserDetailService);
 
-        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        assertNull(
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication()
+        );
     }
 
     // =========================
@@ -169,5 +209,4 @@ class JwtAuthenticationFilterTest {
 
         verify(filterChain).doFilter(request, response);
     }
-
 }

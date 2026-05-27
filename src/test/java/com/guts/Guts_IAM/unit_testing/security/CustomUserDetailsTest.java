@@ -15,6 +15,7 @@ class CustomUserDetailsTest {
 
         CustomUserDetails userDetails =
                 new CustomUserDetails(
+                        1234,
                         "broUser",
                         "secret123",
                         true,
@@ -35,6 +36,7 @@ class CustomUserDetailsTest {
 
         CustomUserDetails userDetails =
                 new CustomUserDetails(
+                        1234,
                         "test",
                         "pass",
                         true,

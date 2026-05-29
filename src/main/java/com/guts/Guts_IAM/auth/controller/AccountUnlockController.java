@@ -16,8 +16,8 @@ public class AccountUnlockController {
     private final UnlockAccountService unlockAccountService;
 
     @PostMapping("/request")
-    public ResponseEntity<String> requestOtp(@RequestParam String email) {
-        unlockAccountService.sendUnlockOtp(email);
+    public ResponseEntity<String> requestOtp(@RequestParam String email,HttpServletRequest httpServletRequest) {
+        unlockAccountService.sendUnlockOtp(email,httpServletRequest);
         return ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN)
                 .body("OTP sent");
     }

@@ -1,5 +1,7 @@
 package com.guts.Guts_IAM.auditlog.model;
 
+import com.guts.Guts_IAM.auditlog.action.Action;
+import com.guts.Guts_IAM.auditlog.action.AuditStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,7 +22,8 @@ public class AuditLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer logId;
 
-    private String logAction;
+    @Enumerated(EnumType.STRING)
+    private Action logAction;
 
     private Integer userId;
 
@@ -34,7 +37,18 @@ public class AuditLog {
 
     private String ipAddress;
 
+    @Enumerated(EnumType.STRING)
+    private AuditStatus status;
+
+    private String location;
+
+    private Double latitude;
+
+    private Double longitude;
+
     private String userAgent;
+
+    private String message;
 
     @CreatedDate
     @Column(updatable = false)

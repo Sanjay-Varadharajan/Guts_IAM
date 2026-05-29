@@ -5,6 +5,7 @@ import com.guts.Guts_IAM.auth.dto.ForgotPasswordRequest;
 import com.guts.Guts_IAM.auth.service.PasswordAuthService;
 import com.guts.Guts_IAM.auth.dto.ResetPasswordRequest;
 import com.guts.Guts_IAM.common.response.ApiResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +22,8 @@ public class CredentialsController {
 
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponse<Void>> forgetPassword(@Valid @RequestBody ForgotPasswordRequest request){
-        passwordAuthService.forgotPassword(request);
+    public ResponseEntity<ApiResponse<Void>> forgetPassword(@Valid @RequestBody ForgotPasswordRequest request, HttpServletRequest httpServletRequest){
+        passwordAuthService.forgotPassword(request,httpServletRequest);
 
         ApiResponse<Void> apiResponse=new ApiResponse<>(
                 true,
@@ -36,8 +37,8 @@ public class CredentialsController {
 
 
     @PostMapping("/reset-password")
-    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request){
-        passwordAuthService.resetPassword(request);
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request,HttpServletRequest  httpServletRequest){
+        passwordAuthService.resetPassword(request,httpServletRequest);
 
         ApiResponse<Void> apiResponse=new ApiResponse<>(
                 true,

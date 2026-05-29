@@ -1,5 +1,8 @@
 package com.guts.Guts_IAM.auth.service;
 
+import com.guts.Guts_IAM.auditlog.action.Action;
+import com.guts.Guts_IAM.auditlog.action.AuditStatus;
+import com.guts.Guts_IAM.auditlog.service.AuditLogService;
 import com.guts.Guts_IAM.auth.dto.LoginRequest;
 import com.guts.Guts_IAM.common.exception.types.AccountLockedException;
 import com.guts.Guts_IAM.common.exception.types.ResourceNotFoundException;
@@ -46,15 +49,38 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final TokenAuditRepository tokenAuditRepository;
     private final AuditRepository auditRepo;
-    private final AuditService auditService;
+    private final AuditLogService auditLogService;
     private final SessionService sessionService;
     private final UserSessionRepository userSessionRepository;
 
     public JwtResponse login(LoginRequest loginRequest, HttpServletRequest request) {
 
-        User user = userRepository.findByUserMailAndActiveTrue(loginRequest.getUserMail())
-                .orElseThrow(() -> new ResourceNotFoundException("user not found","NOT_FOUND",HttpStatus.NOT_FOUND));
+        Optional<User> optionalUser =
+                userRepository.findByUserMailAndActiveTrue(
+                        loginRequest.getUserMail()
+                );
 
+        if(optionalUser.isEmpty()) {
+
+            auditLogService.log(
+                    null,
+                    Action.LOGIN,
+                    "AUTH",
+                    "UNKNOWN",
+                    AuditStatus.FAILED,
+                    "Login attempted with unknown email: "
+                            + loginRequest.getUserMail(),
+                    request
+            );
+
+            throw new ResourceNotFoundException(
+                    "user not found",
+                    "NOT_FOUND",
+                    HttpStatus.NOT_FOUND
+            );
+        }
+
+        User user = optionalUser.get();
         if (!user.isAccountNonLocked()) {
             throw new AccountLockedException("Account is locked. Please unlock using OTP.","ACCOUNT_LOCKED",HttpStatus.LOCKED);
         }
@@ -71,21 +97,21 @@ public class AuthService {
             userRepository.save(user);
 
         } catch (Exception e) {
+            auditLogService.log(
+                    user,
+                    Action.LOGIN,
+                    "AUTH",
+                    user.getUserId().toString(),
+                    AuditStatus.FAILED,
+                    "Invalid login credentials",
+                    request
+            );
 
             int attempts = updateFailedAttempts(user);
 
             if (attempts >= 3) {
-                AuditLog auditLog=new AuditLog();
-                auditLog.setLogAction("Account Locked due to multiple attempts to login");
-                auditLog.setUserAgent(request.getHeader("User-Agent"));
-                auditLog.setIpAddress(request.getRemoteAddr());
-                auditLog.setRoleName(user.getRoles().toString());
-                auditLog.setResource("AUTH");
-                auditLog.setUserMail(user.getUserMail());
-                auditLog.setUserId(user.getUserId());
-                auditLog.setResourceId(user.getUserId().toString());
-                auditService.saveAudit(auditLog);
 
+                auditLogService.log(user, Action.LOGIN,"AUTH",user.getUserId().toString(),AuditStatus.LOCKED,"Account Locked due to multiple attempts to login",request);
                 throw new RuntimeException(
                         "Account locked after 3 failed attempts. Please unlock via email."
                 );
@@ -102,7 +128,7 @@ public class AuthService {
         String accessToken = jwtUtils.generateAccessToken(loggedInUser);
         sessionService.createSession(user, accessToken, request);
 
-        RefreshToken refreshToken = createRefreshToken(loggedInUser);
+        RefreshToken refreshToken = createRefreshToken(loggedInUser,request);
 
         TokenAudit tokenAudit = new TokenAudit();
         tokenAudit.setAccessToken(HashUtil.sha256(accessToken));
@@ -110,31 +136,27 @@ public class AuthService {
         tokenAudit.setTokenOwner(loggedInUser.getUserMail());
         tokenAuditRepository.save(tokenAudit);
 
-        AuditLog auditLog = new AuditLog();
-        auditLog.setLogAction("LOGIN");
-        auditLog.setUserMail(loggedInUser.getUserMail());
-        auditLog.setResource("AUTH");
-        auditLog.setResourceId(loggedInUser.getUserId().toString());
-        auditLog.setRoleName(loggedInUser.getRoles().toString());
-        auditLog.setUserId(loggedInUser.getUserId());
-        auditLog.setIpAddress(request.getRemoteAddr());
-        String userAgent =
-                Optional.ofNullable(
-                        request.getHeader("User-Agent")
-                ).orElse("UNKNOWN");
 
-        auditLog.setUserAgent(request.getHeader(userAgent));
-        auditRepo.save(auditLog);
-
+        auditLogService.log(user, Action.LOGIN,"AUTH",user.getUserId().toString(),AuditStatus.SUCCESS,"LOGIN ATTEMPT SUCCESSFULLY ACCEPTED",request);
         return new JwtResponse(accessToken, refreshToken.getToken(), "Bearer");
     }
 
 
-    public RefreshToken createRefreshToken(User user) {
+    public RefreshToken createRefreshToken(User user,HttpServletRequest httpServletRequest) {
         RefreshToken token = new RefreshToken();
         token.setUser(user);
         token.setToken(UUID.randomUUID().toString());
         token.setExpiryDate(Date.from(Instant.now().plusMillis(jwtUtils.getRefreshTokenExpiry())));
+        auditLogService.log(
+                user,
+                Action.REFRESH_TOKEN_CREATED,
+                "AUTH",
+                user.getUserId().toString(),
+                AuditStatus.SUCCESS,
+                "Refresh token generated",
+                httpServletRequest
+        );
+
         return refreshTokenRepository.save(token);
     }
 
@@ -147,6 +169,15 @@ public class AuthService {
 
 
         if(refreshTokenCheck.isEmpty()){
+            auditLogService.log(
+                    null,
+                    Action.REFRESH_TOKEN,
+                    "AUTH",
+                    "UNKNOWN",
+                    AuditStatus.FAILED,
+                    "Invalid refresh token used",
+                    httpServletRequest
+            );
             throw new ResourceNotFoundException(
                     "Refresh Token Not Found",
                     "RESOURCE_NOT_FOUND",
@@ -154,31 +185,9 @@ public class AuthService {
             );
         }
 
-        AuditLog auditLog=new AuditLog();
-        String userMail=refreshTokenCheck
-                .get()
-                .getUser()
-                .getUserMail();
+        auditLogService.log(refreshTokenCheck.get().getUser(), Action.LOGOUT,"AUTH",refreshTokenCheck.get().getUser().getUserId().toString(),AuditStatus.SUCCESS,"LOGOUT SUCCESSFULLY INITIATED AND FINISHED",httpServletRequest);
 
-        Set<Role> rolesSet=refreshTokenCheck
-                .get()
-                .getUser()
-                .getRoles();
 
-        auditLog.setRoleName(rolesSet.toString());
-        auditLog.setLogAction("LOGOUT");
-        auditLog.setUserMail(userMail);
-        auditLog.setUserId(refreshTokenCheck.get().getUser().getUserId());
-        auditLog.setResourceId(refreshTokenCheck.get().getUser().getUserId().toString());
-        auditLog.setResource("AUTH");
-        auditLog.setIpAddress(httpServletRequest.getRemoteAddr());
-        String userAgent =
-                Optional.ofNullable(
-                        httpServletRequest.getHeader("User-Agent")
-                ).orElse("UNKNOWN");
-        auditLog.setUserAgent(httpServletRequest.getHeader(userAgent));
-
-        auditRepo.save(auditLog);
 
         refreshTokenRepository.deleteByToken(refreshTokenStr);
 
@@ -198,6 +207,16 @@ public class AuthService {
             UserSession session = optionalSession.get();
 
             session.setRevoked(true);
+
+            auditLogService.log(
+                    session.getUser(),
+                    Action.SESSION_REVOKE,
+                    "SESSION",
+                    session.getId().toString(),
+                    AuditStatus.SUCCESS,
+                    "Session revoked during logout",
+                    httpServletRequest
+            );
 
             userSessionRepository.save(session);
         }
@@ -241,35 +260,9 @@ public class AuthService {
 
         userSessionRepository.saveAll(sessions);
 
-        AuditLog auditLog = new AuditLog();
+        User user=userRepository.findById(userId).get();
 
-        auditLog.setUserId(Math.toIntExact(userId));
+        auditLogService.log(user, Action.LOGOUT_ALL,"AUTH",userId.toString(),AuditStatus.SUCCESS,"LOGOUT FROM ALL DEVICE SUCCESSFULLY INITIATED AND FINISHED",request);
 
-        auditLog.setUserMail(userDetails.getUsername());
-
-        auditLog.setLogAction("LOGOUT_ALL");
-
-        auditLog.setResource("AUTH");
-
-        auditLog.setResourceId(userId.toString());
-
-        auditLog.setIpAddress(
-                request.getRemoteAddr()
-        );
-
-        auditLog.setAuditedOn(LocalDateTime.now());
-
-        String userAgent =
-                Optional.ofNullable(
-                        request.getHeader("User-Agent")
-                ).orElse("UNKNOWN");
-
-        auditLog.setUserAgent(userAgent);
-
-        auditLog.setRoleName(
-                userDetails.getAuthorities().toString()
-        );
-
-        auditRepo.save(auditLog);
     }
     }

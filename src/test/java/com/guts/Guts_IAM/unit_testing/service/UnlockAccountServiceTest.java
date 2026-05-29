@@ -10,6 +10,7 @@ import com.guts.Guts_IAM.security.jwt.util.JwtUtils;
 import com.guts.Guts_IAM.token.refreshtoken.model.RefreshToken;
 import com.guts.Guts_IAM.user.model.User;
 import com.guts.Guts_IAM.user.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -34,6 +35,9 @@ public class UnlockAccountServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    HttpServletRequest httpServletRequest;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -62,7 +66,7 @@ public class UnlockAccountServiceTest {
 
         when(passwordEncoder.encode(anyString())).thenReturn("hashedOtp");
 
-        unlockAccountService.sendUnlockOtp(email);
+        unlockAccountService.sendUnlockOtp(email,httpServletRequest);
 
         verify(accountUnlockRepository).save(any(AccountUnlockOtp.class));
         verify(emailService).sendUnlockOtp(eq(email), anyString());
@@ -77,7 +81,7 @@ public class UnlockAccountServiceTest {
                 .thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () -> {
-            unlockAccountService.sendUnlockOtp(email);
+            unlockAccountService.sendUnlockOtp(email,httpServletRequest);
         });
     }
 
@@ -93,7 +97,7 @@ public class UnlockAccountServiceTest {
                 .thenReturn(Optional.of(user));
 
         assertThrows(RuntimeException.class, () -> {
-            unlockAccountService.sendUnlockOtp(email);
+            unlockAccountService.sendUnlockOtp(email,httpServletRequest);
         });
     }
 
@@ -126,7 +130,7 @@ public class UnlockAccountServiceTest {
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setToken("refreshToken");
 
-        when(authService.createRefreshToken(user))
+        when(authService.createRefreshToken(user,))
                 .thenReturn(refreshToken);
 
         JwtResponse response = unlockAccountService

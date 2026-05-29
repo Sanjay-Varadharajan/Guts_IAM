@@ -1,7 +1,10 @@
 package com.guts.Guts_IAM.auth.service;
 
+import com.guts.Guts_IAM.auditlog.action.Action;
+import com.guts.Guts_IAM.auditlog.action.AuditStatus;
 import com.guts.Guts_IAM.auditlog.model.AuditLog;
 import com.guts.Guts_IAM.auditlog.repository.AuditRepository;
+import com.guts.Guts_IAM.auditlog.service.AuditLogService;
 import com.guts.Guts_IAM.auth.dto.PendingSignUp;
 import com.guts.Guts_IAM.auth.dto.SignupRequest;
 import com.guts.Guts_IAM.common.exception.types.ConflictException;
@@ -34,7 +37,8 @@ public class SignupService {
 
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    private final AuditRepository auditRepository;
+    private final AuditLogService auditLogService;
+
 
     private final RoleRepository roleRepository;
 
@@ -53,6 +57,17 @@ public class SignupService {
                 );
 
         if (userExists.isPresent()) {
+
+            auditLogService.log(
+                    userExists.get(),
+                    Action.SIGNUP,
+                    "AUTH",
+                    userExists.get().getUserId().toString(),
+                    AuditStatus.FAILED,
+                    "Signup attempted with already registered email",
+                    httpServletRequest
+            );
+
 
             throw new ConflictException(
                     "User Already Exists",
@@ -91,36 +106,17 @@ public class SignupService {
                 pendingSignup.getUserMail(),
                 verificationToken
         );
-
-        AuditLog auditLog = new AuditLog();
-
-        Set<String> rolesSet = new HashSet<>();
-
-        rolesSet.add("ROLE_USER");
-
-        auditLog.setLogAction(
-                "SIGN_UP_PENDING"
+        auditLogService.log(
+                null,
+                Action.SEND_VERIFICATION_EMAIL,
+                "AUTH",
+                pendingSignup.getUserMail(),
+                AuditStatus.SUCCESS,
+                "Verification email sent successfully",
+                httpServletRequest
         );
 
-        auditLog.setRoleName(
-                rolesSet.toString()
-        );
 
-        auditLog.setUserMail(
-                pendingSignup.getUserMail()
-        );
-
-        auditLog.setResource("AUTH");
-
-        auditLog.setIpAddress(
-                httpServletRequest.getRemoteAddr()
-        );
-
-        auditLog.setUserAgent(
-                httpServletRequest.getHeader("User-Agent")
-        );
-
-        auditRepository.save(auditLog);
 
         return new ApiResponse(
                 true,
@@ -135,12 +131,26 @@ public class SignupService {
             HttpServletRequest httpServletRequest
     ) {
 
+
+
+
         PendingSignUp pendingSignup =
                 (PendingSignUp) redisTemplate
                         .opsForValue()
                         .get("signup:" + token);
 
+
+
         if (pendingSignup == null) {
+            auditLogService.log(
+                    null,
+                    Action.VERIFY_EMAIL,
+                    "AUTH",
+                   null ,
+                    AuditStatus.FAILED,
+                    "Invalid or expired email verification token used",
+                    httpServletRequest
+            );
 
             throw new ConflictException(
                     "Invalid or expired token",
@@ -149,12 +159,22 @@ public class SignupService {
             );
         }
 
+
         Optional<User> existingUser =
                 userRepository.findByUserMailAndActiveTrue(
                         pendingSignup.getUserMail()
                 );
 
         if (existingUser.isPresent()) {
+            auditLogService.log(
+                    existingUser.get(),
+                    Action.VERIFY_EMAIL,
+                    "AUTH",
+                    existingUser.get().getUserId().toString(),
+                    AuditStatus.FAILED,
+                    "Email verification attempted for already existing user",
+                    httpServletRequest
+            );
 
             throw new ConflictException(
                     "User Already Exists",
@@ -204,43 +224,20 @@ public class SignupService {
         User savedUser =
                 userRepository.save(user);
 
+        auditLogService.log(
+                savedUser,
+                Action.VERIFY_EMAIL,
+                "AUTH",
+                savedUser.getUserId().toString(),
+                AuditStatus.SUCCESS,
+                "Email verified successfully and account created",
+                httpServletRequest
+        );
+
         redisTemplate.delete(
                 "signup:" + token
         );
 
-        AuditLog auditLog = new AuditLog();
-
-        Set<String> rolesSet = new HashSet<>();
-
-        rolesSet.add("ROLE_USER");
-
-        auditLog.setLogAction(
-                "EMAIL_VERIFIED"
-        );
-
-        auditLog.setRoleName(
-                rolesSet.toString()
-        );
-
-        auditLog.setUserMail(
-                savedUser.getUserMail()
-        );
-
-        auditLog.setResourceId(
-                savedUser.getUserId().toString()
-        );
-
-        auditLog.setResource("AUTH");
-
-        auditLog.setIpAddress(
-                httpServletRequest.getRemoteAddr()
-        );
-
-        auditLog.setUserAgent(
-                httpServletRequest.getHeader("User-Agent")
-        );
-
-        auditRepository.save(auditLog);
 
         return new ApiResponse(
                 true,

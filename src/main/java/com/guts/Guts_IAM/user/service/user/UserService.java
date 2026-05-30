@@ -1,6 +1,9 @@
 package com.guts.Guts_IAM.user.service.user;
 
+import com.guts.Guts_IAM.auditlog.action.Action;
+import com.guts.Guts_IAM.auditlog.action.AuditStatus;
 import com.guts.Guts_IAM.auditlog.model.AuditLog;
+import com.guts.Guts_IAM.auditlog.service.AuditLogService;
 import com.guts.Guts_IAM.user.model.User;
 import com.guts.Guts_IAM.auditlog.repository.AuditRepository;
 import com.guts.Guts_IAM.user.repository.UserRepository;
@@ -17,6 +20,7 @@ import com.guts.Guts_IAM.common.exception.types.UserNameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Optional;
 import java.util.Set;
 
 
@@ -29,24 +33,43 @@ public class UserService {
 
     private final AuditRepository auditRepository;
 
+    private final AuditLogService auditLogService;
+
     public UserResponseDto viewProfile(Authentication authentication, HttpServletRequest request) {
 
-        User userExisting=userRepository.findByUserMailAndActiveTrue(authentication.getName()).orElseThrow(
-                ()->new UserNameNotFoundException(authentication.getName()+"Not found","NOT_FOUND",HttpStatus.NOT_FOUND)
-        );
+        Optional<User> userExisting1=userRepository.findByUserMailAndActiveTrue(authentication.getName());
+
+        if(userExisting1.isEmpty()){
+
+            auditLogService.log(
+                    null,
+                    Action.VIEW_PROFILE,
+                    "USER",
+                    authentication.getName(),
+                    AuditStatus.FAILED,
+                    "no profile found",
+                    request
+            );
+
+            throw new UserNameNotFoundException(authentication.getName()+" Not found","NOT_FOUND",HttpStatus.NOT_FOUND);
+
+        }
+
+        User userExisting=userExisting1.get();
 
         UserResponseDto userResponseDto=new UserResponseDto(userExisting);
 
-        AuditLog auditLog=new AuditLog();
-        auditLog.setRoleName(userExisting.getRoles().toString());
-        auditLog.setUserAgent(request.getHeader("User-Agent"));
-        auditLog.setLogAction("PROFILE_VIEWED");
-        auditLog.setResource("VIEW");
-        auditLog.setIpAddress(request.getRemoteAddr());
-        auditLog.setUserMail(userExisting.getUserMail());
-        auditLog.setResourceId(userExisting.getUserId().toString());
-        auditRepository.save(auditLog);
 
+
+        auditLogService.log(
+                userExisting,
+                Action.VIEW_PROFILE,
+                "USER",
+                userExisting.getUserId().toString(),
+                AuditStatus.SUCCESS,
+                "Profile viewed successfully",
+                request
+        );
 
         return userResponseDto;
     }
@@ -54,39 +77,101 @@ public class UserService {
 
     public UserResponseDto updateProfile(UserRequestDto userRequestDto, Authentication authentication, HttpServletRequest request) {
 
-        User userExisting=userRepository.findByUserMailAndActiveTrue(authentication.getName()).orElseThrow(
-                ()->new UserNameNotFoundException(authentication.getName()+"Not found","NOT_FOUND",HttpStatus.NOT_FOUND)
-        );
 
-        if(userRequestDto.getUserName()!=null){
+        Optional<User> userExisting1=userRepository.findByUserMailAndActiveTrue(authentication.getName());
+
+        if(userExisting1.isEmpty()){
+
+            auditLogService.log(
+                    null,
+                    Action.UPDATE_PROFILE,
+                    "USER",
+                    authentication.getName(),
+                    AuditStatus.FAILED,
+                    "no profile found",
+                    request
+            );
+
+            throw new UserNameNotFoundException(authentication.getName()+" Not found","NOT_FOUND",HttpStatus.NOT_FOUND);
+
+        }
+
+        User userExisting=userExisting1.get();
+
+
+        String oldUserName = userExisting.getUserName();
+
+        boolean updated = false;
+
+        if(userRequestDto.getUserName() != null &&
+                !userRequestDto.getUserName().isBlank()) {
+
             userExisting.setUserName(userRequestDto.getUserName());
+            updated = true;
+        }
+
+        if(!updated){
+
+            auditLogService.log(
+                    userExisting,
+                    Action.UPDATE_PROFILE,
+                    "USER",
+                    userExisting.getUserId().toString(),
+                    AuditStatus.FAILED,
+                    "No valid fields provided for update",
+                    request
+            );
+
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "No valid fields provided for update"
+            );
         }
 
         userRepository.save(userExisting);
 
+        auditLogService.log(
+                userExisting,
+                Action.UPDATE_PROFILE,
+                "USER",
+                userExisting.getUserId().toString(),
+                AuditStatus.SUCCESS,
+                "UserName changed from "
+                        + oldUserName
+                        + " to "
+                        + userExisting.getUserName(),
+                request
+        );
+
         UserResponseDto userResponseDto=new UserResponseDto(userExisting);
 
-        AuditLog auditLog=new AuditLog();
-        auditLog.setRoleName(userExisting.getRoles().toString());
-        auditLog.setUserAgent(request.getHeader("User-Agent"));
-        auditLog.setLogAction("PROFILE_UPDATED");
-        auditLog.setResource("UPDATE");
-        auditLog.setIpAddress(request.getRemoteAddr());
-        auditLog.setUserMail(userExisting.getUserMail());
-        auditLog.setResourceId(userExisting.getUserId().toString());
-        auditRepository.save(auditLog);
 
         return userResponseDto;
     }
 
     public Page<AuditLogDtoForUser> viewLogs(Authentication authentication, Pageable pageable, HttpServletRequest request) {
 
-        User user=userRepository.findByUserMailAndActiveTrue(authentication.getName()).orElseThrow(
-                ()->new UserNameNotFoundException(authentication.getName()+"Not found","NOT_FOUND",HttpStatus.NOT_FOUND)
-        );
 
 
 
+        Optional<User> userExisting1=userRepository.findByUserMailAndActiveTrue(authentication.getName());
+
+        if(userExisting1.isEmpty()){
+            auditLogService.log(
+                    null,
+                    Action.VIEW_LOGS,
+                    "AUDIT_LOG",
+                    authentication.getName(),
+                    AuditStatus.FAILED,
+                    "no profile found",
+                    request
+            );
+
+            throw new UserNameNotFoundException(authentication.getName()+"Not found","NOT_FOUND",HttpStatus.NOT_FOUND);
+
+        }
+
+        User user=userExisting1.get();
 
                 Set<String> allowedSort=Set.of("auditedOn");
 
@@ -99,17 +184,19 @@ public class UserService {
             }
         });
 
-        AuditLog auditLog=new AuditLog();
-        auditLog.setRoleName(user.getRoles().toString());
-        auditLog.setUserAgent(request.getHeader("User-Agent"));
-        auditLog.setLogAction("LOG_VIEWED");
-        auditLog.setResource("VIEW");
-        auditLog.setIpAddress(request.getRemoteAddr());
-        auditLog.setUserMail(user.getUserMail());
-        auditLog.setResourceId(user.getUserId().toString());
-        auditRepository.save(auditLog);
 
         Page<AuditLog> auditLogs=auditRepository.findByUserMail(pageable,authentication.getName());
+
+        auditLogService.log(
+                user,
+                Action.VIEW_LOGS,
+                "AUDIT_LOG",
+                user.getUserId().toString(),
+                AuditStatus.SUCCESS,
+                "logs viewed successfully",
+                request
+        );
+
         return auditLogs.map(AuditLogDtoForUser::new);
     }
 }

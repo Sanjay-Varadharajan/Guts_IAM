@@ -1,11 +1,11 @@
 package com.guts.Guts_IAM.auditlog.dto;
 
+import com.guts.Guts_IAM.auditlog.action.Action;
+import com.guts.Guts_IAM.auditlog.action.AuditStatus;
 import com.guts.Guts_IAM.auditlog.model.AuditLog;
-import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
 
@@ -16,7 +16,7 @@ public class AuditLogDto {
 
     private Integer logId;
 
-    private String logAction;
+    private Action logAction;
 
     private Integer userId;
 
@@ -30,21 +30,35 @@ public class AuditLogDto {
 
     private String ipAddress;
 
+    private AuditStatus status;
+
+    private String location;
+
+    private Double latitude;
+
+    private Double longitude;
+
     private String userAgent;
 
-    @CreatedDate
-    @Column(updatable = false)
+    private String message;
+
     private LocalDateTime auditedOn;
 
     public AuditLogDto(AuditLog auditLog) {
-        this.auditedOn=auditLog.getAuditedOn();
-        this.ipAddress=auditLog.getIpAddress();
-        this.logAction=auditLog.getLogAction();
-        this.logId=auditLog.getLogId();
-        this.resource=auditLog.getResource();
-        this.resourceId=auditLog.getResourceId();
-        this.roleName=auditLog.getRoleName();
-        this.userAgent=auditLog.getUserAgent();
-        this.userId=auditLog.getUserId();
+        this.logId = auditLog.getLogId();
+        this.logAction = auditLog.getLogAction();
+        this.userId = auditLog.getUserId();
+        this.userMail = auditLog.getUserMail();
+        this.roleName = auditLog.getRoleName();
+        this.resource = auditLog.getResource();
+        this.resourceId = auditLog.getResourceId();
+        this.ipAddress = auditLog.getIpAddress();
+        this.status = auditLog.getStatus();
+        this.location = auditLog.getLocation();
+        this.latitude = auditLog.getLatitude();
+        this.longitude = auditLog.getLongitude();
+        this.userAgent = auditLog.getUserAgent();
+        this.message = auditLog.getMessage();
+        this.auditedOn = auditLog.getAuditedOn();
     }
 }

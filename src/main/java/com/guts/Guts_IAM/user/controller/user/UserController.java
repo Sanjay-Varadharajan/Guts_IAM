@@ -8,16 +8,21 @@ import com.guts.Guts_IAM.user.dto.user.UserResponseDto;
 import com.guts.Guts_IAM.user.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.formula.functions.T;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.time.LocalDateTime;
 
@@ -46,7 +51,7 @@ public class UserController {
     }
 
 
-    @PatchMapping("/me/update")
+    @PutMapping("/me/update")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<ApiResponse<UserResponseDto>> updateProfile(@RequestBody UserRequestDto userRequestDto, Authentication authentication,HttpServletRequest request){
 
@@ -82,5 +87,31 @@ public class UserController {
                 LocalDateTime.now()
         );
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+
+    @GetMapping("/my-logs/download")
+    public ResponseEntity<InputStreamResource> downloadMyLogs(
+            Authentication authentication,
+            HttpServletRequest httpServletRequest)
+            throws IOException {
+
+        InputStreamResource resource =
+                userService.downloadMyLogs(
+                        authentication,
+                        httpServletRequest
+                );
+
+        return ResponseEntity.ok()
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=my_audit_logs.xlsx"
+                )
+                .contentType(
+                        MediaType.parseMediaType(
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        )
+                )
+                .body(resource);
     }
 }

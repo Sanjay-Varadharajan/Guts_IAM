@@ -2,6 +2,7 @@ package com.guts.Guts_IAM.user.service.user;
 
 import com.guts.Guts_IAM.auditlog.action.Action;
 import com.guts.Guts_IAM.auditlog.action.AuditStatus;
+import com.guts.Guts_IAM.auditlog.export.service.DownloadAuditLogService;
 import com.guts.Guts_IAM.auditlog.model.AuditLog;
 import com.guts.Guts_IAM.auditlog.service.AuditLogService;
 import com.guts.Guts_IAM.user.model.User;
@@ -12,16 +13,23 @@ import com.guts.Guts_IAM.user.dto.user.UserRequestDto;
 import com.guts.Guts_IAM.user.dto.user.UserResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import com.guts.Guts_IAM.common.exception.types.UserNameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.Optional;
 import java.util.Set;
+
+import static io.jsonwebtoken.Jwts.header;
 
 
 @Service
@@ -34,6 +42,8 @@ public class UserService {
     private final AuditRepository auditRepository;
 
     private final AuditLogService auditLogService;
+
+    private final DownloadAuditLogService downloadAuditLogService;
 
     public UserResponseDto viewProfile(Authentication authentication, HttpServletRequest request) {
 
@@ -199,4 +209,49 @@ public class UserService {
 
         return auditLogs.map(AuditLogDtoForUser::new);
     }
-}
+
+    public InputStreamResource downloadMyLogs(
+            Authentication authentication,
+            HttpServletRequest httpServletRequest)
+            throws IOException {
+
+        Optional<User> userExisting =
+                userRepository.findByUserMailAndActiveTrue(authentication.getName());
+
+        if (userExisting.isEmpty()) {
+
+            auditLogService.log(
+                    null,
+                    Action.DOWNLOAD_AUDIT_LOG,
+                    "AUDIT_LOG",
+                    authentication.getName(),
+                    AuditStatus.FAILED,
+                    "No profile found",
+                    httpServletRequest
+            );
+
+            throw new UserNameNotFoundException(
+                    authentication.getName() + " Not found",
+                    "NOT_FOUND",
+                    HttpStatus.NOT_FOUND
+            );
+        }
+
+        ByteArrayInputStream file =
+                downloadAuditLogService.downloadMyLogs(authentication.getName());
+
+        User user=userExisting.get();
+
+        auditLogService.log(
+                user,
+                Action.DOWNLOAD_AUDIT_LOG,
+                "AUDIT_LOG",
+                user.getUserId().toString(),
+                AuditStatus.SUCCESS,
+                "Audit log downloaded successfully",
+                httpServletRequest
+        );
+
+        return new InputStreamResource(file);
+    }
+    }

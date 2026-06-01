@@ -2,6 +2,7 @@ package com.guts.Guts_IAM.auditlog.export.service;
 
 import com.guts.Guts_IAM.auditlog.dto.AuditLogDtoForUser;
 import com.guts.Guts_IAM.auditlog.export.util.AuditExcelExporterForUser;
+import com.guts.Guts_IAM.auditlog.model.AuditLog;
 import com.guts.Guts_IAM.auditlog.repository.AuditRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -30,6 +31,25 @@ public class DownloadAuditLogService {
 
         XSSFWorkbook workbook =
                 AuditExcelExporterForUser.export(logs);
+
+        ByteArrayOutputStream out =
+                new ByteArrayOutputStream();
+
+        workbook.write(out);
+        workbook.close();
+
+        return new ByteArrayInputStream(out.toByteArray());
+    }
+
+    public ByteArrayInputStream downloadAllLogs()
+            throws IOException {
+
+        List<AuditLog> logs =
+                auditRepository
+                        .findAll();
+
+        XSSFWorkbook workbook =
+                AuditExcelExporterForUser.exportAll(logs);
 
         ByteArrayOutputStream out =
                 new ByteArrayOutputStream();

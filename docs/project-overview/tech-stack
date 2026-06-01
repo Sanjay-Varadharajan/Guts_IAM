@@ -1,0 +1,68 @@
+## Technology Stack
+
+GUTS IAM is built using a modern backend-focused stack designed for secure authentication, scalable access control, and efficient system performance.
+
+The system follows a layered architecture with strong emphasis on security, modularity, and extensibility.
+
+---
+
+### Backend
+
+- Java — Core programming language
+- Spring Boot — Main framework for building REST APIs
+- Spring Security — Handles authentication and authorization workflows
+- Hibernate / JPA — ORM layer for database interaction
+
+---
+
+### Authentication & Security
+
+- JWT (JSON Web Tokens) — Stateless authentication mechanism for secure API access
+- BCrypt Password Encoding — Secure password hashing
+- Role-Based Access Control (RBAC) — Structured authorization model
+
+---
+
+### Session & Caching
+
+- Redis — Used for caching, session management, and token handling to improve performance and scalability
+
+---
+
+### Database
+
+- MySQL — Primary relational database for storing users, roles, permissions, audit logs, and security data
+
+---
+
+### Email Services
+
+- SMTP Email Service — Used for:
+  - Email verification during user registration
+  - Password reset and account recovery flows
+
+---
+
+### API Design
+
+- RESTful APIs — Standard communication layer between client and server
+- JSON — Primary data exchange format
+
+---
+
+### Build & Dependency Management
+
+- Maven — Dependency management and build automation tool
+
+---
+
+### Testing
+
+- JUnit — Unit testing framework for backend validation
+
+---
+
+### Version Control
+
+- Git — Source code version control
+- GitHub — Repository hosting and collaboration platform

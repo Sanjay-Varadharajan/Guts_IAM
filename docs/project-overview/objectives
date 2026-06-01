@@ -1,0 +1,15 @@
+## Objectives
+
+The primary goal of GUTS IAM is to make access control simple, secure, and not a chaotic mess of hardcoded permissions and forgotten rules.
+
+The system is designed to ensure that every user, service, and request is properly authenticated and authorized before touching any sensitive resources.
+
+Key objectives include:
+
+- Centralize identity and access management so everything is controlled from one place instead of scattered logic everywhere
+- Provide secure authentication to ensure only valid users get in (no freeloaders allowed)
+- Enforce role-based authorization so access is structured and predictable, not random
+- Reduce manual access handling and administrative overhead
+- Improve system security by enforcing consistent access policies
+- Maintain accountability through traceable and auditable actions
+- Support scalable access control as the system grows beyond “just a small project” stage

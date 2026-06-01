@@ -1,0 +1,95 @@
+## Features
+
+GUTS IAM provides a comprehensive identity, access, and security control system designed to manage authentication, authorization, and security monitoring in a centralized way.
+
+It also includes additional security mechanisms such as email verification, password recovery, session control, and early-stage fraud detection signals.
+
+---
+
+### Authentication
+
+Handles secure user identity verification and access control.
+
+- Secure user login system
+- JWT-based authentication for stateless sessions
+- Password encryption and secure credential storage
+- Token validation for protected endpoints
+- Prevents unauthorized access attempts
+
+---
+
+### User Management
+
+Manages user accounts and lifecycle operations.
+
+- Create and register users
+- Update user profile information
+- Enable or disable accounts
+- Maintain user status and activity tracking
+- Centralized identity control
+
+---
+
+### Role & Permission Management
+
+Implements structured access control using RBAC.
+
+- Create and manage roles
+- Assign roles to users
+- Define system permissions
+- Map permissions to roles
+- Enforce authorization at runtime
+
+---
+
+### Session Management
+
+Ensures controlled and secure user sessions.
+
+- Session tracking and validation
+- Token-based session handling
+- Session expiry control
+- Secure logout mechanism
+
+---
+
+### Token System
+
+Improves security and user experience through token lifecycle management.
+
+- Access token generation using JWT
+- Refresh token support for session renewal
+- Secure token validation and expiration handling
+
+---
+
+### Email Verification & Password Recovery
+
+Provides account security and recovery mechanisms.
+
+- Email verification during registration
+- Secure password reset via email link
+- Time-bound reset tokens
+- Prevents unauthorized account recovery attempts
+
+---
+
+### Location Tracking (Security Layer)
+
+Adds an additional security signal layer for anomaly detection.
+
+- Capture login location metadata (IP-based)
+- Track login patterns across locations
+- Support future fraud detection model integration (ML-based system planned)
+- Helps identify suspicious or unusual access behavior
+
+---
+
+### Audit Logging
+
+Tracks all critical system activities for transparency and monitoring.
+
+- Record user and admin actions
+- Store security-relevant events
+- Maintain historical audit trail
+- Support export for reporting and compliance

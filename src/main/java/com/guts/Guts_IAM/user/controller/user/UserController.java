@@ -8,7 +8,6 @@ import com.guts.Guts_IAM.user.dto.user.UserResponseDto;
 import com.guts.Guts_IAM.user.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.ss.formula.functions.T;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

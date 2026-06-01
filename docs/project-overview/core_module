@@ -1,0 +1,80 @@
+## Core Modules
+
+GUTS IAM is structured into independent yet interconnected modules. Each module is responsible for a specific domain of identity, access control, or security management, ensuring separation of concerns and scalability.
+
+---
+
+### Authentication Module
+
+Responsible for verifying user identity and securing access to the system.
+
+- Handles user login and credential validation
+- Generates and validates JWT tokens
+- Integrates with Redis for session and token management
+- Supports secure logout and token invalidation
+
+---
+
+### User Management Module
+
+Manages user lifecycle and profile operations.
+
+- User registration and onboarding
+- Profile updates and account management
+- Account activation and deactivation
+- Maintains user status and metadata
+
+---
+
+### Role Management Module
+
+Defines and manages access roles within the system.
+
+- Create and update roles
+- Assign roles to users
+- Organize access levels based on responsibilities
+- Acts as a bridge between users and permissions
+
+---
+
+### Permission Management Module
+
+Controls fine-grained authorization rules.
+
+- Define system permissions
+- Assign permissions to roles
+- Enforce access control during request processing
+- Ensures users only access allowed resources
+
+---
+
+### Audit Logging Module
+
+Tracks system activity for monitoring and accountability.
+
+- Records user and admin actions
+- Stores security-relevant events
+- Maintains historical logs for analysis
+- Supports log export for reporting and compliance
+
+---
+
+### Security Enhancement Module
+
+Provides additional security layers beyond basic IAM functionality.
+
+- Email verification during user registration
+- Password reset and recovery via email
+- Location-based login tracking (security signal layer)
+- Supports future fraud detection integration (ML-ready design)
+
+---
+
+### Session Management Module
+
+Handles user session lifecycle and security control.
+
+- Session tracking using Redis
+- Token expiration and refresh handling
+- Secure session invalidation
+- Prevents unauthorized session reuse

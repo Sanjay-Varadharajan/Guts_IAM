@@ -1,0 +1,9 @@
+## What is GUTS IAM?
+
+GUTS IAM (Identity and Access Management) is a centralized security platform that handles who you are, what you can do, and what you absolutely cannot touch.
+
+It manages identities, authentication, authorization, roles, and permissions across applications — basically acting like the strict gatekeeper who checks your ID twice and still asks, “Are you really supposed to be here?”
+
+Built on a Role-Based Access Control (RBAC) model, the system ensures that access is structured, predictable, and not based on vibes or guesswork.
+
+In short, GUTS IAM keeps things secure, organized, and slightly less chaotic than a group project without a leader.

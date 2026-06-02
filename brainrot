@@ -19,7 +19,7 @@ need to learn-logistic regression,random forest,decision tree
 
 write controller test using mockmvc
 
-
+im hitting db once even when i use redis i wanna make sure the role of the user is correct, if i use only redis and i check it ,it may cause a chaos like if suppose the admin->user privilege reduced but when i fetch it only from redis i don't know the updated role so im using db lookup
 
 jdbc:mysql://localhost:3306/guts
 

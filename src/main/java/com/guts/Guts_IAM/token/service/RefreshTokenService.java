@@ -5,6 +5,7 @@
     import com.guts.Guts_IAM.auditlog.repository.AuditRepository;
     import com.guts.Guts_IAM.auditlog.service.AuditLogService;
     import com.guts.Guts_IAM.common.exception.types.TokenNotFoundException;
+    import com.guts.Guts_IAM.redis.service.RefreshTokenCacheService;
     import com.guts.Guts_IAM.security.util.hashutil.HashUtil;
     import com.guts.Guts_IAM.security.jwt.dto.JwtResponse;
     import com.guts.Guts_IAM.security.jwt.util.JwtUtils;
@@ -35,60 +36,135 @@
         private final JwtUtils jwtUtils;
         private final TokenAuditRepository tokenAuditRepository;
         private final AuditLogService auditLogService;
+        private final RefreshTokenCacheService refreshTokenCacheService;
+        private final UserRepository userRepository;
 
 
 
-        public JwtResponse refreshAccessToken(String refreshTokenStr, HttpServletRequest httpServletRequest) {
-            Optional<RefreshToken> refreshToken1 = refreshTokenRepository.findByToken(refreshTokenStr);
+        public JwtResponse refreshAccessToken(
+                String refreshTokenStr,
+                HttpServletRequest httpServletRequest) {
 
-            if(refreshToken1.isEmpty()){
-                auditLogService.log(
-                        null,
-                        Action.REFRESH_ACCESS_TOKEN,
-                        "AUTH",
-                        null,
-                        AuditStatus.FAILED,
-                        "Refresh token not found",
-                        httpServletRequest);
+            Integer userId =
+                    refreshTokenCacheService
+                            .getUserId(refreshTokenStr);
 
-                throw new TokenNotFoundException("Refresh token not found", "NOT_FOUND",HttpStatus.NOT_FOUND);
+            User user;
+
+            if (userId != null) {
+
+                System.out.println("REDIS HIT");
+                user = userRepository.findById(userId)
+                        .orElseThrow(() ->
+                                new TokenNotFoundException(
+                                        "User not found",
+                                        "NOT_FOUND",
+                                        HttpStatus.NOT_FOUND
+                                ));
+
+
+
+            } else {
+
+                System.out.println("REDIS MISS");
+
+                RefreshToken refreshToken =
+                        refreshTokenRepository
+                                .findByToken(refreshTokenStr)
+                                .orElseThrow(() -> {
+
+                                    auditLogService.log(
+                                            null,
+                                            Action.REFRESH_ACCESS_TOKEN,
+                                            "AUTH",
+                                            null,
+                                            AuditStatus.FAILED,
+                                            "Refresh token not found",
+                                            httpServletRequest
+                                    );
+
+                                    return new TokenNotFoundException(
+                                            "Refresh token not found",
+                                            "NOT_FOUND",
+                                            HttpStatus.NOT_FOUND
+                                    );
+                                });
+
+                if (refreshToken.getExpiryDate()
+                        .before(Date.from(Instant.now()))) {
+
+                    refreshTokenRepository.delete(refreshToken);
+
+                    auditLogService.log(
+                            refreshToken.getUser(),
+                            Action.REFRESH_ACCESS_TOKEN,
+                            "AUTH",
+                            refreshToken.getUser()
+                                    .getUserId()
+                                    .toString(),
+                            AuditStatus.EXPIRED,
+                            "Refresh token expired",
+                            httpServletRequest
+                    );
+
+                    throw new ResponseStatusException(
+                            HttpStatus.UNAUTHORIZED,
+                            "Invalid refresh token"
+                    );
+                }
+
+                user = refreshToken.getUser();
+
+                long ttl =
+                        refreshToken.getExpiryDate().getTime()
+                                - System.currentTimeMillis();
+
+                if (ttl > 0) {
+
+                    refreshTokenCacheService.save(
+                            refreshToken.getToken(),
+                            user.getUserId(),
+                            ttl
+                    );
+                }
             }
 
-            RefreshToken refreshToken=refreshToken1.get();
+            String newAccessToken =
+                    jwtUtils.generateAccessToken(user);
 
-            User user=refreshToken.getUser();
+            TokenAudit tokenAudit = new TokenAudit();
 
-            if (refreshToken.getExpiryDate().before(Date.from(Instant.now()))) {
-                refreshTokenRepository.delete(refreshToken);
-                auditLogService.log(user,
-                        Action.REFRESH_ACCESS_TOKEN,
-                        "AUTH",
-                        user.getUserId().toString(),
-                        AuditStatus.EXPIRED,
-                        "Refresh token expired and was revoked",
-                        httpServletRequest);
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token");
-            }
+            tokenAudit.setTokenOwner(
+                    user.getUserMail()
+            );
 
-            String newAccessToken = jwtUtils.generateAccessToken(refreshToken.getUser());
+            tokenAudit.setAction(
+                    "REFRESH_ACCESS_TOKEN"
+            );
 
-            TokenAudit tokenAudit=new TokenAudit();
-            tokenAudit.setTokenOwner(refreshToken.getUser().getUserMail());
-            tokenAudit.setAction("REFRESH_ACCESS_TOKEN");
-            String hashedNewToken= HashUtil.sha256(newAccessToken);
-            tokenAudit.setAccessToken(hashedNewToken);
+            String hashedNewToken =
+                    HashUtil.sha256(newAccessToken);
+
+            tokenAudit.setAccessToken(
+                    hashedNewToken
+            );
+
             tokenAuditRepository.save(tokenAudit);
 
-
-            auditLogService.log(user,
+            auditLogService.log(
+                    user,
                     Action.REFRESH_ACCESS_TOKEN,
                     "AUTH",
                     user.getUserId().toString(),
                     AuditStatus.SUCCESS,
                     "Access token refreshed successfully",
-                    httpServletRequest);
+                    httpServletRequest
+            );
 
-
-            return new JwtResponse(newAccessToken, refreshToken.getToken(), "Bearer");
+            return new JwtResponse(
+                    newAccessToken,
+                    refreshTokenStr,
+                    "Bearer"
+            );
         }
-    }
+        }

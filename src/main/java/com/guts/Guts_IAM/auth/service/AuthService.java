@@ -6,6 +6,7 @@ import com.guts.Guts_IAM.auditlog.service.AuditLogService;
 import com.guts.Guts_IAM.auth.dto.LoginRequest;
 import com.guts.Guts_IAM.common.exception.types.AccountLockedException;
 import com.guts.Guts_IAM.common.exception.types.ResourceNotFoundException;
+import com.guts.Guts_IAM.redis.service.RefreshTokenCacheService;
 import com.guts.Guts_IAM.security.userdetails.CustomUserDetails;
 import com.guts.Guts_IAM.sessionmanagement.model.UserSession;
 import com.guts.Guts_IAM.sessionmanagement.repository.UserSessionRepository;
@@ -52,6 +53,7 @@ public class AuthService {
     private final AuditLogService auditLogService;
     private final SessionService sessionService;
     private final UserSessionRepository userSessionRepository;
+    private final RefreshTokenCacheService refreshTokenCacheService;
 
     public JwtResponse login(LoginRequest loginRequest, HttpServletRequest request) {
 
@@ -122,8 +124,7 @@ public class AuthService {
             }
         }
 
-        User loggedInUser = userRepository.findByUserMailAndActiveTrue(loginRequest.getUserMail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User loggedInUser = optionalUser.get();
 
         String accessToken = jwtUtils.generateAccessToken(loggedInUser);
         sessionService.createSession(user, accessToken, request);
@@ -142,24 +143,40 @@ public class AuthService {
     }
 
 
-    public RefreshToken createRefreshToken(User user,HttpServletRequest httpServletRequest) {
-        RefreshToken token = new RefreshToken();
-        token.setUser(user);
-        token.setToken(UUID.randomUUID().toString());
-        token.setExpiryDate(Date.from(Instant.now().plusMillis(jwtUtils.getRefreshTokenExpiry())));
-        auditLogService.log(
-                user,
-                Action.REFRESH_TOKEN_CREATED,
-                "AUTH",
-                user.getUserId().toString(),
-                AuditStatus.SUCCESS,
-                "Refresh token generated",
-                httpServletRequest
-        );
+        public RefreshToken createRefreshToken(User user,HttpServletRequest httpServletRequest) {
+            RefreshToken token = new RefreshToken();
+            token.setUser(user);
+            token.setToken(UUID.randomUUID().toString());
+            token.setExpiryDate(Date.from(Instant.now().plusMillis(jwtUtils.getRefreshTokenExpiry())));
 
-        return refreshTokenRepository.save(token);
-    }
+            RefreshToken savedToken =
+                    refreshTokenRepository.save(token);
 
+            long ttl =
+                    savedToken.getExpiryDate().getTime()
+                            - System.currentTimeMillis();
+
+            refreshTokenCacheService.save(
+                    savedToken.getToken(),
+                    user.getUserId(),
+                    ttl
+            );
+
+
+    
+            auditLogService.log(
+                    user,
+                    Action.REFRESH_TOKEN_CREATED,
+                    "AUTH",
+                    user.getUserId().toString(),
+                    AuditStatus.SUCCESS,
+                    "Refresh token generated",
+                    httpServletRequest
+            );
+    
+            return savedToken;
+        }
+    
 
 
 
@@ -187,6 +204,22 @@ public class AuthService {
 
         auditLogService.log(refreshTokenCheck.get().getUser(), Action.LOGOUT,"AUTH",refreshTokenCheck.get().getUser().getUserId().toString(),AuditStatus.SUCCESS,"LOGOUT SUCCESSFULLY INITIATED AND FINISHED",httpServletRequest);
 
+        RefreshToken token =
+                refreshTokenCheck.get();
+
+        Integer userId =
+                token.getUser()
+                        .getUserId();
+
+        refreshTokenCacheService.deleteToken(
+                refreshTokenStr
+        );
+
+        refreshTokenCacheService
+                .removeTokenFromUser(
+                        userId,
+                        refreshTokenStr
+                );
 
 
         refreshTokenRepository.deleteByToken(refreshTokenStr);
@@ -248,7 +281,27 @@ public class AuthService {
         Integer userId =
                 userDetails.getUserId();
 
+
+        Set<Object> tokens =
+                refreshTokenCacheService
+                        .getUserTokens(userId);
+
         refreshTokenRepository.deleteByUser_UserId(userId);
+
+
+        if(tokens != null){
+
+            for(Object token : tokens){
+
+                refreshTokenCacheService
+                        .deleteToken(
+                                token.toString()
+                        );
+            }
+        }
+
+        refreshTokenCacheService
+                .deleteUserTokenSet(userId);
 
         List<UserSession> sessions =
                 userSessionRepository

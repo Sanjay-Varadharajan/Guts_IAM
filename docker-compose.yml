@@ -8,11 +8,11 @@ services:
     restart: always
 
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: guts
-      MYSQL_USER: appuser
-      MYSQL_PASSWORD: apppass
-      MYSQL_ROOT_HOST: "%"
+    MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+MYSQL_DATABASE: ${MYSQL_DATABASE}
+MYSQL_USER: ${MYSQL_USER}
+MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+MYSQL_ROOT_HOST: "%"
 
     ports:
       - "3307:3306"
@@ -21,7 +21,7 @@ services:
       - mysql_data:/var/lib/mysql
 
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+    test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -42,8 +42,8 @@ services:
 
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/guts
-      SPRING_DATASOURCE_USERNAME: appuser
-      SPRING_DATASOURCE_PASSWORD: apppass
+    SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
 
       JWT_SECRET: ${JWT_SECRET}
 

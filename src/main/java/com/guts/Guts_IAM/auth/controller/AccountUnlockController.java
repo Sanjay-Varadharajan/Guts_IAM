@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/unlock")
+@RequestMapping("/api/v1/unlock")
 @RequiredArgsConstructor
 public class AccountUnlockController {
 

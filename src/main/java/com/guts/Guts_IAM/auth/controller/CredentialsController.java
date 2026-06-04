@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/auth")
+@RequestMapping("/api/v1/auth")
 public class CredentialsController {
 
     private final PasswordAuthService passwordAuthService;

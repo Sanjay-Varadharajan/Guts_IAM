@@ -29,7 +29,7 @@ import java.security.Principal;
 import java.time.LocalDateTime;
 
 @RequiredArgsConstructor
-@RequestMapping("/api/admin")
+@RequestMapping("/api/v1/admin")
 @RestController
 public class AdminController {
 

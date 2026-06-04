@@ -5,6 +5,10 @@ Employee -VIEW_OWN_DATA, UPDATE_PROFILE
 Guest	-VIEW_PUBLIC_DATA
 Auditor	-VIEW_LOGS
 
+to remove untracked file- git clean -fd
+to get last commited code- git fetch origin,git reset --hard origin/main
+
+
 
 create view audit log for user
 
@@ -28,3 +32,78 @@ connect to ec2-> ssh -i your-key.pem ec2-user@<EC2-PUBLIC-IP>\
 
 
 aop done only for->authservice,unlockaccountservice
+
+
+idempotency need to be implemented in this design
+redis-store
+Only specific APIs
+Full stored response
+1 hour (safe zone)
+Backend auto-generates UUID
+
+gson->to convert java object to json
+
+IdempotencyKeyResolver-Gets the key from request.
+IdempotencyKeyBuilder-Builds the FINAL Redis key for idempotency
+IdempotencyService-Talks to Redis(instead of talking with redis directly we use this class to speak with redis)
+IdempotencyInterceptor-Runs BEFORE controller->If duplicate:
+
+                                               Return cached response
+
+                                               Controller never executes.
+
+                                               if not duplicate-Allow request
+IdempotencyResponseAdvice-runs after controller->to record the response
+WebConfig-Tell Spring:
+
+          Use my interceptor
+
+          Without this:
+
+          IdempotencyInterceptor
+
+
+
+to prevent race condition in idempotency api here we using SETNX-SET if Not eXists
+race condition if two request come at same time the system checks redis and no key there so execute it both
+SETNX->Example:
+
+       lock:abc123
+
+       Request A:
+
+       SETNX lock:abc123 processing
+
+       Result:
+
+       TRUE
+
+       Lock acquired.
+
+       Request B:
+
+       SETNX lock:abc123 processing
+
+       Result:
+
+       FALSE
+
+       Someone already owns the lock.
+
+       JWT
+        ↓
+       Interceptor
+        ↓
+       Redis Cache Check
+        ↓
+       Redis SETNX Lock
+        ↓
+       Controller
+        ↓
+       Capture Response
+        ↓
+       Store JSON in Redis (1h TTL)
+        ↓
+       Release Lock
+
+

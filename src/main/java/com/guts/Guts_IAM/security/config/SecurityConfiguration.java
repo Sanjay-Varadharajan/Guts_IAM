@@ -41,13 +41,13 @@ public class SecurityConfiguration {
 
                         .authorizeHttpRequests(authorize->
                                 authorize
-                                        .requestMatchers("/api/manager/**").hasRole("MANAGER")
-                                        .requestMatchers("/api/employee/**").hasRole("EMPLOYEE")
-                                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                                        .requestMatchers("/api/guest/**").hasRole("GUEST")
-                                        .requestMatchers("/api/auditor/**").hasRole("AUDITOR")
-                                .requestMatchers("/api/auth/**").permitAll()
-                                        .requestMatchers("/api/unlock/**").permitAll()
+                                        .requestMatchers("/api/v1/manager/**").hasRole("MANAGER")
+                                        .requestMatchers("/api/v1/employee/**").hasRole("EMPLOYEE")
+                                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                                        .requestMatchers("/api/v1/guest/**").hasRole("GUEST")
+                                        .requestMatchers("/api/v1/auditor/**").hasRole("AUDITOR")
+                                .requestMatchers("/api/v1/auth/**").permitAll()
+                                        .requestMatchers("/api/v1/unlock/**").permitAll()
                                         .anyRequest().authenticated())
 
                         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

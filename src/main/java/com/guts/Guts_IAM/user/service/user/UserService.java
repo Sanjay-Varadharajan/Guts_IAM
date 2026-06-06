@@ -252,4 +252,4 @@ public class UserService {
 
         return new InputStreamResource(file);
     }
-    }
+ }

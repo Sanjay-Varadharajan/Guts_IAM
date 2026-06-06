@@ -106,4 +106,7 @@ SETNX->Example:
         ↓
        Release Lock
 
+docker run -d --name redis -p 6379:6379 redis:latest
+
+docker stop container_id
 

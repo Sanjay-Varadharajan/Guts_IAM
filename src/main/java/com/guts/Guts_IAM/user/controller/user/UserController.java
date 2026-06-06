@@ -5,6 +5,7 @@ import com.guts.Guts_IAM.common.response.ApiResponse;
 import com.guts.Guts_IAM.auditlog.dto.AuditLogDtoForUser;
 import com.guts.Guts_IAM.user.dto.user.UserRequestDto;
 import com.guts.Guts_IAM.user.dto.user.UserResponseDto;
+import com.guts.Guts_IAM.user.export.ProfileExportService;
 import com.guts.Guts_IAM.user.service.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.security.Principal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
 @RestController
@@ -31,6 +32,8 @@ import java.time.LocalDateTime;
 public class UserController {
 
     private final UserService userService;
+
+    private final ProfileExportService profileExportService;
 
 
     @GetMapping("/me")
@@ -112,5 +115,25 @@ public class UserController {
                         )
                 )
                 .body(resource);
+    }
+
+    @GetMapping("/me/profile/download")
+    public ResponseEntity<byte[]> downloadProfile(
+            Authentication authentication
+            ,HttpServletRequest httpServletRequest
+    ) throws Exception {
+
+        String json =
+                profileExportService.downloadProfile(authentication,httpServletRequest);
+
+        return ResponseEntity.ok()
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=profile.json"
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(
+                        json.getBytes(StandardCharsets.UTF_8)
+                );
     }
 }

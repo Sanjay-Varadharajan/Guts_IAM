@@ -4,10 +4,10 @@ package com.guts.Guts_IAM.user.controller.admin;
 import com.guts.Guts_IAM.common.response.ApiResponse;
 import com.guts.Guts_IAM.role.dto.RoleRequestDto;
 import com.guts.Guts_IAM.role.dto.RoleResponseDto;
-import com.guts.Guts_IAM.role.model.Role;
 import com.guts.Guts_IAM.user.dto.admin.AdminRequestDto;
 import com.guts.Guts_IAM.auditlog.dto.AuditLogDto;
 import com.guts.Guts_IAM.user.dto.user.UserResponseDto;
+import com.guts.Guts_IAM.user.export.ProfileExportService;
 import com.guts.Guts_IAM.user.service.admin.AdminService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.security.Principal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
 @RequiredArgsConstructor
@@ -34,6 +34,8 @@ import java.time.LocalDateTime;
 public class AdminController {
 
     private final AdminService adminService;
+
+    private final ProfileExportService profileExportService;
 
     @GetMapping("/users/active")
     @PreAuthorize("hasRole('ADMIN')")
@@ -194,6 +196,26 @@ public class AdminController {
                         )
                 )
                 .body(resource);
+    }
+
+    @GetMapping("/me/profile/download")
+    public ResponseEntity<byte[]> downloadProfile(
+            Authentication authentication
+            ,HttpServletRequest httpServletRequest
+    ) throws Exception {
+
+        String json =
+                profileExportService.downloadProfile(authentication,httpServletRequest);
+
+        return ResponseEntity.ok()
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=profile.json"
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(
+                        json.getBytes(StandardCharsets.UTF_8)
+                );
     }
 
 }

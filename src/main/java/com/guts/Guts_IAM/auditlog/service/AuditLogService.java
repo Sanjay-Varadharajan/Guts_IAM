@@ -70,18 +70,21 @@ public class AuditLogService {
 
             AuditLog auditLog = new AuditLog();
 
-            auditLog.setLogAction(action);
+            if(user!=null) {
+                auditLog.setLogAction(action);
 
-            auditLog.setUserId(user.getUserId());
+                auditLog.setUserId(user.getUserId());
 
-            auditLog.setUserMail(user.getUserMail());
+                auditLog.setUserMail(user.getUserMail());
 
-            auditLog.setRoleName(
-                    user.getRoles()
-                            .stream()
-                            .map(role -> role.getName())
-                            .collect(Collectors.joining(", "))
-            );
+                auditLog.setRoleName(
+                        user.getRoles()
+                                .stream()
+                                .map(role -> role.getName())
+                                .collect(Collectors.joining(", "))
+                );
+
+            }
 
             auditLog.setResource(resource);
 

@@ -110,3 +110,10 @@ docker run -d --name redis -p 6379:6379 redis:latest
 
 docker stop container_id
 
+
+to start redis-sudo systemctl start redis6
+to enable redis-sudo systemctl enable redis6
+     scp -i "C:\AWS key pair\guts-key-pair-aws.pem" "C:\Guts_IAM\target\Guts_IAM-0.0.1-SNAPSHOT.jar" ec2-user@13.233.89.235:/home/ec2-user/ -to add jar
+java -jar jar_name->to run in aws
+
+

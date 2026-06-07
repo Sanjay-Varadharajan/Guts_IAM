@@ -16,13 +16,15 @@ public class GeoIPService {
     private DatabaseReader dbReader;
 
     @PostConstruct
-    public void init() throws Exception {
-
-        File database = new ClassPathResource("geoip/GeoLite2-City.mmdb")
-                .getFile();
-
-        dbReader = new DatabaseReader.Builder(database).build();
+    public void init() {
+        try {
+            var inputStream = new ClassPathResource("geoip/GeoLite2-City.mmdb").getInputStream();
+            dbReader = new DatabaseReader.Builder(inputStream).build();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load GeoIP database", e);
+        }
     }
+
 
     public GeoLocation getLocation(String ip) {
 

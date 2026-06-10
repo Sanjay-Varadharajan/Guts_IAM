@@ -5,10 +5,13 @@ import com.guts.Guts_IAM.auditlog.action.AuditStatus;
 import com.guts.Guts_IAM.auditlog.model.AuditLog;
 import com.guts.Guts_IAM.auditlog.repository.AuditRepository;
 import com.guts.Guts_IAM.auditlog.service.AuditLogService;
+import com.guts.Guts_IAM.auditlog.service.AuditService;
 import com.guts.Guts_IAM.auth.dto.PendingSignUp;
 import com.guts.Guts_IAM.auth.dto.SignupRequest;
+import com.guts.Guts_IAM.auth.properties.PasswordValidationResult;
 import com.guts.Guts_IAM.common.exception.types.ConflictException;
 import com.guts.Guts_IAM.common.exception.types.ResourceNotFoundException;
+import com.guts.Guts_IAM.common.exception.types.WeakPasswordException;
 import com.guts.Guts_IAM.common.mail.EmailService;
 import com.guts.Guts_IAM.common.response.ApiResponse;
 import com.guts.Guts_IAM.role.model.Role;
@@ -39,6 +42,9 @@ public class SignupService {
 
     private final AuditLogService auditLogService;
 
+    private final PasswordValidateService passwordValidateService;
+
+
 
     private final RoleRepository roleRepository;
 
@@ -51,9 +57,20 @@ public class SignupService {
             HttpServletRequest httpServletRequest
     ) {
 
+
+        String email = Optional.ofNullable(signUpRequest.getUserMail())
+                .orElseThrow(() -> new IllegalArgumentException("Email cannot be null"))
+                .trim()
+                .toLowerCase();
+
+        String rawPassword = Optional.ofNullable(signUpRequest.getUserPassword())
+                .orElseThrow(() -> new IllegalArgumentException("Password cannot be null"));
+
+
+
         Optional<User> userExists =
                 userRepository.findByUserMailAndActiveTrue(
-                        signUpRequest.getUserMail()
+                        email
                 );
 
         if (userExists.isPresent()) {
@@ -62,7 +79,7 @@ public class SignupService {
                     userExists.get(),
                     Action.SIGNUP,
                     "AUTH",
-                    userExists.get().getUserId().toString(),
+                   email,
                     AuditStatus.FAILED,
                     "Signup attempted with already registered email",
                     httpServletRequest
@@ -76,6 +93,7 @@ public class SignupService {
             );
         }
 
+
         String verificationToken =
                 UUID.randomUUID().toString();
 
@@ -87,12 +105,30 @@ public class SignupService {
         );
 
         pendingSignup.setUserMail(
-                signUpRequest.getUserMail()
+                email
         );
+
+        PasswordValidationResult validationResult =
+                passwordValidateService.validationResult(
+                       rawPassword
+                );
+        if (!validationResult.valid()){
+            auditLogService.log(
+                    null,
+                    Action.SIGNUP,
+                    "AUTH",
+                    email,
+                    AuditStatus.FAILED,
+                    "WEAK PASSWORD IS USED "+ validationResult.message(),
+                    httpServletRequest
+
+            );
+            throw new  WeakPasswordException(validationResult.message(),"WEAK_PASSWORD0",HttpStatus.UNPROCESSABLE_ENTITY);
+        }
 
         pendingSignup.setUserPassword(
                 bCryptPasswordEncoder.encode(
-                        signUpRequest.getUserPassword()
+                        rawPassword
                 )
         );
 
@@ -133,11 +169,13 @@ public class SignupService {
 
 
 
-
         PendingSignUp pendingSignup =
                 (PendingSignUp) redisTemplate
                         .opsForValue()
                         .get("signup:" + token);
+
+
+
 
 
 
@@ -158,6 +196,18 @@ public class SignupService {
                     HttpStatus.BAD_REQUEST
             );
         }
+
+
+        Boolean deleted = redisTemplate.delete("signup:" + token);
+
+        if (deleted == null || !deleted) {
+            throw new ConflictException("Invalid or expired token", "TOKEN_INVALID", HttpStatus.BAD_REQUEST);
+        }
+
+        String email = Optional.ofNullable(pendingSignup.getUserMail())
+                .orElseThrow(() -> new IllegalArgumentException("Email cannot be null"))
+                .trim()
+                .toLowerCase();
 
 
         Optional<User> existingUser =
@@ -204,12 +254,9 @@ public class SignupService {
         );
 
         user.setUserMail(
-                pendingSignup.getUserMail()
+               email
         );
 
-        user.setUserPassword(
-                pendingSignup.getUserPassword()
-        );
 
         user.setRoles(roles);
 
@@ -219,6 +266,10 @@ public class SignupService {
 
         user.setVerificationToken(
                 UUID.randomUUID().toString()
+        );
+
+        user.setUserPassword(
+                pendingSignup.getUserPassword()
         );
 
         User savedUser =
@@ -234,9 +285,7 @@ public class SignupService {
                 httpServletRequest
         );
 
-        redisTemplate.delete(
-                "signup:" + token
-        );
+
 
 
         return new ApiResponse(

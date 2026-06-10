@@ -210,5 +210,24 @@
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
 
+            @ExceptionHandler(WeakPasswordException.class)
+            public ResponseEntity<?> handleWeakPasswordException(UserNameNotFoundException ex,HttpServletRequest request) {
+                Map<String,String> exceptionBody = new HashMap<>();
+                exceptionBody.put("Exception", ex.getClass().getSimpleName());
+
+                ApiErrorResponse response = new ApiErrorResponse(
+                        ex.getMessage(),
+                        HttpStatus.UNPROCESSABLE_ENTITY,
+                        "WEAK_PASSWORD",
+                        exceptionBody,
+                        LocalDateTime.now(),
+                        request.getRequestURI()
+                );
+
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
+            }
+
+
+
 
         }

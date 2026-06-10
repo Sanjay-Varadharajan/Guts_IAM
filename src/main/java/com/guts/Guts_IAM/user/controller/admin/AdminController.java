@@ -107,7 +107,7 @@ public class AdminController {
 
         ApiResponse response=new ApiResponse<>(
                 true,
-                authentication.getName()+" PROFILE_FETCHED",
+                " PROFILE_FETCHED",
                 profile,
                 LocalDateTime.now()
         );

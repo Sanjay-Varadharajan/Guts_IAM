@@ -7,6 +7,8 @@ target/
 /brainrot
 /src/main/resources/geoip/GeoLite2-City.mmdb
 
+
+
 ### STS ###
 .apt_generated
 .classpath

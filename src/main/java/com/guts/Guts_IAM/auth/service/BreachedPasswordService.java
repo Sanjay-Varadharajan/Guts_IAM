@@ -24,7 +24,7 @@ public class BreachedPasswordService {
         try {
 
             ClassPathResource resource =
-                    new ClassPathResource("common-password.txt");
+                    new ClassPathResource("common-passwords.txt");
 
             try (BufferedReader reader =
                          new BufferedReader(

@@ -103,7 +103,7 @@
         @Bean
         public BCryptPasswordEncoder passwordEncoder(){
     
-            return new BCryptPasswordEncoder();
+            return new BCryptPasswordEncoder(12);
         }
     
     }

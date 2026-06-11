@@ -32,6 +32,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,11 +50,15 @@ public class AuthService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final TokenAuditRepository tokenAuditRepository;
-    private final AuditRepository auditRepo;
     private final AuditLogService auditLogService;
     private final SessionService sessionService;
     private final UserSessionRepository userSessionRepository;
     private final RefreshTokenCacheService refreshTokenCacheService;
+    private final BCryptPasswordEncoder passwordEncoder;
+
+
+    private static final String DUMMY_HASH ="$2a$12$wN1QnW6yw80KH.XGlDavKuQPAPW7i10O1jyXTxlMP8.XPeR2GKLle";
+
 
     public JwtResponse login(LoginRequest loginRequest, HttpServletRequest request) {
 
@@ -62,8 +67,12 @@ public class AuthService {
                         loginRequest.getUserMail()
                 );
 
-        if(optionalUser.isEmpty()) {
 
+        if(optionalUser.isEmpty()) {
+            passwordEncoder.matches(
+                    loginRequest.getUserPassword(),
+                    DUMMY_HASH
+            );
             auditLogService.log(
                     null,
                     Action.LOGIN,
@@ -75,10 +84,8 @@ public class AuthService {
                     request
             );
 
-            throw new ResourceNotFoundException(
-                    "user not found",
-                    "NOT_FOUND",
-                    HttpStatus.NOT_FOUND
+            throw new BadCredentialsException(
+                    "Invalid Credentials"
             );
         }
 
@@ -119,7 +126,7 @@ public class AuthService {
                 );
             } else {
                 throw new BadCredentialsException(
-                        "Invalid credentials. Attempt " + attempts + "/3"
+                        "Invalid credentials"
                 );
             }
         }

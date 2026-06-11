@@ -35,7 +35,7 @@ public class EmailService {
     ) {
 
         String verificationLink =
-                "http://localhost:8080/api/auth/verify-email?token="
+                "http://localhost:8080/api/v1/auth/verify-email?token="
                         + token;
 
         SimpleMailMessage simpleMailMessage =

@@ -1,5 +1,7 @@
 package com.guts.Guts_IAM.auditlog.repository;
 
+import com.guts.Guts_IAM.auditlog.action.Action;
+import com.guts.Guts_IAM.auditlog.action.AuditStatus;
 import com.guts.Guts_IAM.auditlog.dto.AuditLogDtoForUser;
 import com.guts.Guts_IAM.auditlog.model.AuditLog;
 import org.springframework.data.domain.Page;
@@ -18,4 +20,11 @@ public interface AuditRepository extends JpaRepository<AuditLog,Integer> {
     int deleteByAuditedOnBefore(LocalDateTime cutoff);
 
     List<AuditLog> findByUserMailOrderByAuditedOnDesc(String userMail);
+
+    List<AuditLog>
+    findTop10ByUserIdAndLogActionAndStatusOrderByAuditedOnDesc(
+            Integer userId,
+            Action action,
+            AuditStatus status
+    );
 }

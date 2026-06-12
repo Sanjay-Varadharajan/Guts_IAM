@@ -53,4 +53,6 @@ public class AuditLog {
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime auditedOn;
+
+
 }

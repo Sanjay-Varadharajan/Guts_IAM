@@ -5,6 +5,9 @@ import com.guts.Guts_IAM.auditlog.action.AuditStatus;
 import com.guts.Guts_IAM.auditlog.model.AuditLog;
 import com.guts.Guts_IAM.auditlog.repository.AuditRepository;
 import com.guts.Guts_IAM.geolocation.service.GeoIPService;
+import com.guts.Guts_IAM.risk.result.RiskAnalysisResult;
+import com.guts.Guts_IAM.risk.service.LoginRiskAssessmentService;
+import com.guts.Guts_IAM.risk.service.RiskAnalysisService;
 import com.guts.Guts_IAM.user.model.User;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +25,10 @@ public class AuditLogService {
 
     private final AuditRepository auditRepository;
     private final GeoIPService geoIPService;
+    private final RiskAnalysisService riskAnalysisService;
+
+    private final LoginRiskAssessmentService
+            loginRiskAssessmentService;
 
     public void log(
             User user,
@@ -113,7 +120,28 @@ public class AuditLogService {
                 );
             }
 
-            auditRepository.save(auditLog);
+            RiskAnalysisResult result = null;
+
+            if (action == Action.LOGIN
+                    && auditStatus == AuditStatus.SUCCESS
+                    && user != null) {
+
+                result = riskAnalysisService.analyze(
+                        auditLog
+                );
+            }
+
+            AuditLog savedAudit =
+                    auditRepository.save(auditLog);
+
+            if (result != null) {
+
+                loginRiskAssessmentService
+                        .saveAssessment(
+                                savedAudit,
+                                result
+                        );
+            }
 
         } catch (Exception e) {
 

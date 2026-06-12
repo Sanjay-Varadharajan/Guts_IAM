@@ -7,6 +7,7 @@ import com.guts.Guts_IAM.auth.dto.LoginRequest;
 import com.guts.Guts_IAM.common.exception.types.AccountLockedException;
 import com.guts.Guts_IAM.common.exception.types.ResourceNotFoundException;
 import com.guts.Guts_IAM.redis.service.RefreshTokenCacheService;
+import com.guts.Guts_IAM.risk.result.RiskAnalysisResult;
 import com.guts.Guts_IAM.security.userdetails.CustomUserDetails;
 import com.guts.Guts_IAM.sessionmanagement.model.UserSession;
 import com.guts.Guts_IAM.sessionmanagement.repository.UserSessionRepository;
@@ -132,6 +133,7 @@ public class AuthService {
         }
 
         User loggedInUser = optionalUser.get();
+
 
         String accessToken = jwtUtils.generateAccessToken(loggedInUser);
         sessionService.createSession(user, accessToken, request);

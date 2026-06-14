@@ -4,7 +4,6 @@ package com.guts.Guts_IAM.auth.dto;
 import com.guts.Guts_IAM.user.model.User;
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

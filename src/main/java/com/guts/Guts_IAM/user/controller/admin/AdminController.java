@@ -9,8 +9,10 @@ import com.guts.Guts_IAM.auditlog.dto.AuditLogDto;
 import com.guts.Guts_IAM.user.dto.user.UserResponseDto;
 import com.guts.Guts_IAM.user.export.ProfileExportService;
 import com.guts.Guts_IAM.user.service.admin.AdminService;
+import com.guts.Guts_IAM.user.stats.UserStatsForAdmin;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -149,6 +151,7 @@ public class AdminController {
     }
 
     @GetMapping("/my-logs/download")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<InputStreamResource> downloadMyLogs(
             Authentication authentication,
             HttpServletRequest httpServletRequest)
@@ -174,6 +177,7 @@ public class AdminController {
     }
 
     @GetMapping("/all-logs/download")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<InputStreamResource> downloadAllLogs(
             Authentication authentication,
             HttpServletRequest httpServletRequest)
@@ -199,6 +203,7 @@ public class AdminController {
     }
 
     @GetMapping("/me/profile/download")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<byte[]> downloadProfile(
             Authentication authentication
             ,HttpServletRequest httpServletRequest
@@ -218,4 +223,18 @@ public class AdminController {
                 );
     }
 
+    @GetMapping("stats")
+    public ResponseEntity<ApiResponse<UserStatsForAdmin>> getStats(Authentication authentication,HttpServletRequest httpServletRequest){
+        UserStatsForAdmin stats=adminService.getStats(authentication,httpServletRequest);
+
+        ApiResponse response=new ApiResponse(
+                true,
+                "STATS_LOADED",
+                stats,
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.ok(response);
+
+    }
 }

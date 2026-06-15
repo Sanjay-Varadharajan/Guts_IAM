@@ -17,6 +17,9 @@ import com.guts.Guts_IAM.user.repository.UserRepository;
 import com.guts.Guts_IAM.user.dto.admin.AdminRequestDto;
 import com.guts.Guts_IAM.auditlog.dto.AuditLogDto;
 import com.guts.Guts_IAM.user.dto.user.UserResponseDto;
+import com.guts.Guts_IAM.user.stats.AdminStats;
+import com.guts.Guts_IAM.user.stats.AdminStatsService;
+import com.guts.Guts_IAM.user.stats.UserStatsForAdmin;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
@@ -41,6 +44,8 @@ import java.util.Set;
 public class AdminService {
 
 
+    private final AdminStatsService adminStatsService;
+
     private final UserRepository userRepository;
 
     private final AuditRepository auditRepository;
@@ -50,6 +55,7 @@ public class AdminService {
     private final AuditLogService auditLogService;
 
     private final DownloadAuditLogService downloadAuditLogService;
+
 
     @Transactional(readOnly = true)
     public Page<UserResponseDto> getAllActiveUsers(Authentication authentication, Pageable pageable, HttpServletRequest request) {
@@ -175,8 +181,12 @@ public class AdminService {
             );
         }
 
+        boolean wasActive = user1.isActive();
+
         user1.setActive(!user1.isActive());
         userRepository.save(user1);
+
+        adminStatsService.updateUserStatusStats(wasActive,!wasActive);
 
 
         auditLogService.log(
@@ -520,5 +530,43 @@ public class AdminService {
         );
 
         return new InputStreamResource(file);
+    }
+
+    public UserStatsForAdmin getStats(Authentication authentication, HttpServletRequest httpServletRequest) {
+        Optional<User> userExisting =
+                userRepository.findByUserMailAndActiveTrue(authentication.getName());
+
+        if (userExisting.isEmpty()) {
+            auditLogService.log(
+                    null,
+                    Action.LOAD_STATS,
+                    "STATS",
+                    authentication.getName(),
+                    AuditStatus.FAILED,
+                    "No profile found",
+                    httpServletRequest
+            );
+
+            throw new UserNameNotFoundException(
+                    authentication.getName() + " Not found",
+                    "NOT_FOUND",
+                    HttpStatus.NOT_FOUND
+            );
+        }
+
+        User user=userExisting.get();
+
+        AdminStats stats=adminStatsService.getStatsSnapshot();
+        auditLogService.log(
+                user,
+                Action.LOAD_STATS,
+                "STATS",
+                user.getUserId().toString(),
+                AuditStatus.SUCCESS,
+                "Admin fetched system user statistics",
+                httpServletRequest
+        );
+
+        return new UserStatsForAdmin(stats);
     }
 }

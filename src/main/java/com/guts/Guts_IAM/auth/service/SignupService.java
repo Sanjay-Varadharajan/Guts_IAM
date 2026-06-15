@@ -18,6 +18,7 @@ import com.guts.Guts_IAM.role.model.Role;
 import com.guts.Guts_IAM.role.repository.RoleRepository;
 import com.guts.Guts_IAM.user.model.User;
 import com.guts.Guts_IAM.user.repository.UserRepository;
+import com.guts.Guts_IAM.user.stats.AdminStatsService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -43,6 +44,8 @@ public class SignupService {
     private final AuditLogService auditLogService;
 
     private final PasswordValidateService passwordValidateService;
+
+    private final AdminStatsService adminStatsService;
 
 
 
@@ -274,6 +277,9 @@ public class SignupService {
 
         User savedUser =
                 userRepository.save(user);
+
+        //stats
+        adminStatsService.onUserCreated(user);
 
         auditLogService.log(
                 savedUser,

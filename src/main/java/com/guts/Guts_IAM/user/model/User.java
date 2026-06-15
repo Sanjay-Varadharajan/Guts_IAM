@@ -12,15 +12,20 @@
     import org.springframework.data.annotation.CreatedDate;
     import org.springframework.data.jpa.domain.support.AuditingEntityListener;
     import java.util.Set;
-    
+
+
     import java.time.LocalDateTime;
-    
+
     @Entity
     @AllArgsConstructor
     @NoArgsConstructor
     @Data
     @EntityListeners(AuditingEntityListener.class)
-    @Table(name = "users")
+    @Table(name = "users",
+                      indexes = {
+            @Index(name = "user_mail_idx",columnList = "userMail"),
+                              @Index(name = "user_created_at_idx",columnList = "userCreatedOn" ),
+                      })
     public class User {
     
         @Id

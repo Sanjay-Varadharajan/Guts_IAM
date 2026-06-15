@@ -5,6 +5,7 @@ import com.guts.Guts_IAM.auditlog.action.AuditStatus;
 import com.guts.Guts_IAM.auditlog.service.AuditLogService;
 import com.guts.Guts_IAM.auth.dto.LoginRequest;
 import com.guts.Guts_IAM.common.exception.types.AccountLockedException;
+import com.guts.Guts_IAM.common.exception.types.InvalidCredentialsException;
 import com.guts.Guts_IAM.common.exception.types.ResourceNotFoundException;
 import com.guts.Guts_IAM.redis.service.RefreshTokenCacheService;
 import com.guts.Guts_IAM.risk.result.RiskAnalysisResult;
@@ -85,8 +86,10 @@ public class AuthService {
                     request
             );
 
-            throw new BadCredentialsException(
-                    "Invalid Credentials"
+            throw new InvalidCredentialsException(
+                    "Invalid Credentials",
+                    "BAD_CREDENTIALS",
+                    HttpStatus.UNAUTHORIZED
             );
         }
 
@@ -126,8 +129,10 @@ public class AuthService {
                         "Account locked after 3 failed attempts. Please unlock via email."
                 );
             } else {
-                throw new BadCredentialsException(
-                        "Invalid credentials"
+                throw new InvalidCredentialsException(
+                        "Invalid Credentials",
+                        "BAD_CREDENTIALS",
+                        HttpStatus.UNAUTHORIZED
                 );
             }
         }

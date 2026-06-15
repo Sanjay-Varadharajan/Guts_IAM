@@ -116,3 +116,7 @@ to enable redis-sudo systemctl enable redis6
      scp -i "C:\AWS key pair\guts-key-pair-aws.pem" "C:\Guts_IAM\target\Guts_IAM-0.0.1-SNAPSHOT.jar" ec2-user@13.233.89.235:/home/ec2-user/ -to add jar
 
 java -jar jar_name->to run in aws
+sudo systemctl status redis6->to check redis running
+
+docker->
+create docker file

@@ -2,6 +2,7 @@ package com.guts.Guts_IAM.sessionmanagement.service;
 
 
 import com.guts.Guts_IAM.security.userdetails.CustomUserDetails;
+import com.guts.Guts_IAM.security.util.hashutil.HashUtil;
 import com.guts.Guts_IAM.sessionmanagement.model.UserSession;
 import com.guts.Guts_IAM.sessionmanagement.repository.UserSessionRepository;
 import com.guts.Guts_IAM.user.model.User;
@@ -47,7 +48,7 @@ public class SessionService {
         UserSession session = new UserSession();
 
         session.setUser(user);
-        session.setJwtToken(jwt);
+        session.setJwtToken(HashUtil.sha256(jwt));
 
         session.setBrowser(browser);
         session.setDevice(operatingSystem);

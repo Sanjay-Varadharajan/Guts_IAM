@@ -117,7 +117,7 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @PatchMapping("/me/update")
+    @PutMapping("/me/update")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UserResponseDto>> updateProfile(@RequestBody AdminRequestDto adminRequestDto, Authentication authentication, HttpServletRequest request){
 
@@ -224,6 +224,7 @@ public class AdminController {
     }
 
     @GetMapping("stats")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<UserStatsForAdmin>> getStats(Authentication authentication,HttpServletRequest httpServletRequest){
         UserStatsForAdmin stats=adminService.getStats(authentication,httpServletRequest);
 

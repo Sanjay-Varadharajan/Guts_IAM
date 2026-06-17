@@ -57,7 +57,6 @@ public class AdminService {
     private final DownloadAuditLogService downloadAuditLogService;
 
 
-    @Transactional(readOnly = true)
     public Page<UserResponseDto> getAllActiveUsers(Authentication authentication, Pageable pageable, HttpServletRequest request) {
 
         Optional<User> userExisting1=userRepository.findByUserMailAndActiveTrue(authentication.getName());
@@ -202,7 +201,6 @@ public class AdminService {
         return new UserResponseDto(user1);
     }
 
-    @Transactional(readOnly = true)
     public Page<AuditLogDto> getAllAuditLog(Authentication authentication, Pageable pageable, HttpServletRequest request) {
         Optional<User> userExisting1=userRepository.findByUserMailAndActiveTrue(authentication.getName());
 
@@ -251,7 +249,6 @@ public class AdminService {
         return auditLogs.map(AuditLogDto::new);
     }
 
-    @Transactional(readOnly = true)
     public UserResponseDto viewProfile(Authentication authentication, HttpServletRequest request) {
         Optional<User> userExisting1=userRepository.findByUserMailAndActiveTrue(authentication.getName());
 

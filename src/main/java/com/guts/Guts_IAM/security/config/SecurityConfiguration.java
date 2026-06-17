@@ -53,6 +53,9 @@
                                             .requestMatchers("/api/v1/auditor/**").hasRole("AUDITOR")
                                     .requestMatchers("/api/v1/auth/**").permitAll()
                                             .requestMatchers("/api/v1/unlock/**").permitAll()
+                                            .requestMatchers(        "/swagger-ui/**",
+                                                    "/v3/api-docs/**"
+                                            ).permitAll()
                                             .anyRequest().authenticated())
     
                             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

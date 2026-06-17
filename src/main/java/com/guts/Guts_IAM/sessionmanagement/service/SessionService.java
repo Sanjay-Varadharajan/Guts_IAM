@@ -48,7 +48,7 @@ public class SessionService {
         UserSession session = new UserSession();
 
         session.setUser(user);
-        session.setJwtToken(HashUtil.sha256(jwt));
+        session.setJwtToken(jwt);
 
         session.setBrowser(browser);
         session.setDevice(operatingSystem);

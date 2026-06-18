@@ -12,7 +12,6 @@ import com.guts.Guts_IAM.user.service.admin.AdminService;
 import com.guts.Guts_IAM.user.stats.UserStatsForAdmin;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.checkerframework.checker.units.qual.A;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -52,7 +51,7 @@ public class AdminController {
 
         Page<UserResponseDto> response=adminService.getAllActiveUsers(authentication,pageable,request);
 
-        ApiResponse apiResponse=new ApiResponse<>(
+        ApiResponse<Page<UserResponseDto>> apiResponse=new ApiResponse<>(
                 true,
                 "Active Users",
                 response,
@@ -67,7 +66,7 @@ public class AdminController {
     public ResponseEntity<ApiResponse<UserResponseDto>> updateUserStatus(@PathVariable Integer userId, Authentication authentication, HttpServletRequest request){
         UserResponseDto response=adminService.updateUserStatus(userId,authentication,request);
 
-        ApiResponse apiResponse=new ApiResponse<>(
+        ApiResponse<UserResponseDto> apiResponse=new ApiResponse<>(
                 true,
                 "",
                 response,
@@ -91,7 +90,7 @@ public class AdminController {
 
         Page<AuditLogDto> dtoResponse=adminService.getAllAuditLog(authentication,pageable,request);
 
-        ApiResponse response=new ApiResponse<>(
+        ApiResponse<Page<AuditLogDto>> response=new ApiResponse<>(
                 true,
                 "AUDIT_LOG_FETCHED",
                 dtoResponse,
@@ -107,7 +106,7 @@ public class AdminController {
 
         UserResponseDto profile=adminService.viewProfile(authentication,request);
 
-        ApiResponse response=new ApiResponse<>(
+        ApiResponse<UserResponseDto> response=new ApiResponse<>(
                 true,
                 " PROFILE_FETCHED",
                 profile,
@@ -123,7 +122,7 @@ public class AdminController {
 
         UserResponseDto updatedProfile=adminService.updateProfile(adminRequestDto,authentication,request);
 
-        ApiResponse apiResponse=new ApiResponse(
+        ApiResponse<UserResponseDto> apiResponse=new ApiResponse<>(
                 true,
                 "PROFILE_UPDATED",
                 updatedProfile,
@@ -140,7 +139,7 @@ public class AdminController {
         RoleResponseDto postResponse=adminService.addRoles(dto,httpServletRequest,authentication);
 
 
-        ApiResponse apiResponse=new ApiResponse<>(
+        ApiResponse<RoleResponseDto> apiResponse=new ApiResponse<>(
                 true,
                 dto.getRoleName()+"ROLE_ADDED",
                 postResponse,
@@ -228,7 +227,7 @@ public class AdminController {
     public ResponseEntity<ApiResponse<UserStatsForAdmin>> getStats(Authentication authentication,HttpServletRequest httpServletRequest){
         UserStatsForAdmin stats=adminService.getStats(authentication,httpServletRequest);
 
-        ApiResponse response=new ApiResponse(
+        ApiResponse<UserStatsForAdmin> response=new ApiResponse<>(
                 true,
                 "STATS_LOADED",
                 stats,

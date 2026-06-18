@@ -42,7 +42,7 @@ public class UserController {
 
         UserResponseDto profile=userService.viewProfile(authentication,request);
 
-        ApiResponse response=new ApiResponse<>(
+        ApiResponse<UserResponseDto> response=new ApiResponse<>(
                 true,
                 authentication.getName()+" PROFILE_FETCHED",
                 profile,
@@ -59,7 +59,7 @@ public class UserController {
 
         UserResponseDto updatedProfile=userService.updateProfile(userRequestDto,authentication,request);
 
-        ApiResponse apiResponse=new ApiResponse(
+        ApiResponse<UserResponseDto> apiResponse=new ApiResponse<>(
                 true,
                 "PROFILE_UPDATED",
                 updatedProfile,
@@ -82,7 +82,7 @@ public class UserController {
 
         Page<AuditLogDtoForUser> auditResponse=userService.viewLogs(authentication,pageable,request);
 
-        ApiResponse response=new ApiResponse<>(
+        ApiResponse<Page<AuditLogDtoForUser>> response=new ApiResponse<>(
                 true,
                 "USER_AUDIT_LOG",
                 auditResponse,

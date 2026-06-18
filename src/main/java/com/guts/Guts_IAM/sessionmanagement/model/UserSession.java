@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class UserSession {
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -36,6 +35,6 @@ public class UserSession {
 
     private boolean revoked;
 
-    @ManyToOne
+    @ManyToOne  
     private User user;
 }

@@ -123,7 +123,6 @@ create docker file
 
 
 account-unlock endpoints
-credentials controller
 refresh token controller
 auth controller
 session controller

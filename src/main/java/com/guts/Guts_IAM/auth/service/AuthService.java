@@ -118,7 +118,9 @@ public class AuthService {
                     AuditStatus.FAILED,
                     "Invalid login credentials",
                     request
+
             );
+            System.out.println("LOGIN FAILED");
 
             int attempts = updateFailedAttempts(user);
 
@@ -275,10 +277,15 @@ public class AuthService {
         int attempts = user.getFailedAttempts() + 1;
         user.setFailedAttempts(attempts);
 
+        System.out.println(
+                "Failed Attempts Before Save = "
+                        + attempts
+        );
         if (attempts >= 3) {
             user.setAccountNonLocked(false);
             user.setLockTime(java.time.LocalDateTime.now());
         }
+
 
         userRepository.save(user);
         return attempts;

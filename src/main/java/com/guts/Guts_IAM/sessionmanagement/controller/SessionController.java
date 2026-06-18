@@ -2,6 +2,7 @@ package com.guts.Guts_IAM.sessionmanagement.controller;
 
 
 import com.guts.Guts_IAM.common.response.ApiResponse;
+import com.guts.Guts_IAM.sessionmanagement.dto.SessionDto;
 import com.guts.Guts_IAM.sessionmanagement.model.UserSession;
 import com.guts.Guts_IAM.sessionmanagement.repository.UserSessionRepository;
 import com.guts.Guts_IAM.sessionmanagement.service.SessionService;
@@ -28,12 +29,12 @@ public class SessionController {
 
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<UserSession>>> getSessions(
+    public ResponseEntity<ApiResponse<List<SessionDto>>> getSessions(
             Authentication authentication) {
 
-        List<UserSession> sessions=sessionService.getSessions(authentication);
+        List<SessionDto> sessions=sessionService.getSessions(authentication);
 
-        ApiResponse<List<UserSession>> apiResponse=new ApiResponse<>(
+        ApiResponse<List<SessionDto>> apiResponse=new ApiResponse<>(
                 true,
                 "ACTIVE_SESSIONS",
                 sessions,

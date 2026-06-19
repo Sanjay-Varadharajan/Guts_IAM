@@ -2,11 +2,9 @@ package com.guts.Guts_IAM.sessionmanagement.service;
 
 
 import com.guts.Guts_IAM.security.userdetails.CustomUserDetails;
-import com.guts.Guts_IAM.security.util.hashutil.HashUtil;
 import com.guts.Guts_IAM.sessionmanagement.dto.SessionDto;
 import com.guts.Guts_IAM.sessionmanagement.model.UserSession;
 import com.guts.Guts_IAM.sessionmanagement.repository.UserSessionRepository;
-import com.guts.Guts_IAM.user.dto.user.UserResponseDto;
 import com.guts.Guts_IAM.user.model.User;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

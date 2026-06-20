@@ -56,6 +56,9 @@
                                             .requestMatchers(        "/swagger-ui/**",
                                                     "/v3/api-docs/**"
                                             ).permitAll()
+                                            .requestMatchers("/actuator/health").permitAll()
+                                            .requestMatchers("/actuator/info").permitAll()
+                                            .requestMatchers("/actuator/metrics").hasRole("ADMIN")
                                             .anyRequest().authenticated())
     
                             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

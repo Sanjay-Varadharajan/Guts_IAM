@@ -136,4 +136,18 @@ public class UserController {
                         json.getBytes(StandardCharsets.UTF_8)
                 );
     }
+
+    @PatchMapping("me/status")
+    public ResponseEntity<ApiResponse<UserResponseDto>> toggleUserStatus(Authentication authentication,HttpServletRequest httpServletRequest){
+        UserResponseDto responseDto=userService.toggleUserStatus(authentication,httpServletRequest);
+
+        ApiResponse<UserResponseDto> apiResponse=new ApiResponse<>(
+                true,
+                "STATUS UPDATED",
+                responseDto,
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.ok(apiResponse);
+    }
 }

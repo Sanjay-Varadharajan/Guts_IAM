@@ -1,6 +1,7 @@
 package com.guts.Guts_IAM.user.stats;
 
 import com.guts.Guts_IAM.user.model.User;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -8,12 +9,11 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Service
+@RequiredArgsConstructor
 public class AdminStatsService {
+
     private final AdminStatsRepository statsRepo;
 
-    public AdminStatsService(AdminStatsRepository statsRepo) {
-        this.statsRepo = statsRepo;
-    }
 
     private AdminStats getStats() {
         return statsRepo.findById(1L)

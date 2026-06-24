@@ -6,7 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
-@RestController("/api/v1/admin")
+@RestController
+        @RequestMapping("/api/v1/key/admin")
 public class ApiKeyController {
 
 

@@ -1,0 +1,4 @@
+Architecture Note:
+API Gateway introduced a bootstrap problem where API key generation
+required an API key. Solution: whitelist initial key generation flow
+and secure it with admin authentication.

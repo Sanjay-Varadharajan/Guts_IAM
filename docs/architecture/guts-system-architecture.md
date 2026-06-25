@@ -1,37 +1,28 @@
+```mermaid
 flowchart TD
 
-%% CLIENT
-A[Client / Web App / API User]
-
-%% PROXY
-B[GUTS-PROXY - API Gateway]
-
-%% IAM
-C[GUTS-IAM - Auth Service]
-
-%% REDIS
+A[Client]
+B[GUTS Proxy API Gateway]
+C[GUTS IAM Service]
 D[(Redis Cache)]
-
-%% MYSQL
 E[(MySQL Database)]
 
-%% FLOW
-A -->|1. Request + API Key| B
+A -->|Request + API Key| B
 
-B -->|2. Validate API Key| D
-D -->|Cache Lookup| B
+B -->|Validate API Key| D
+D --> B
 
-B -->|3. Forward Request| C
+B -->|Forward Request| C
 
-C -->|4. Authenticate User| D
-D -->|Session / Roles| C
+C -->|Authenticate User| D
+D --> C
 
-C -->|5. Fetch Data| E
-E -->|User / Roles| C
+C -->|Fetch User Roles| E
+E --> C
 
-C -->|6. Auth Response| B
+C -->|Auth Result| B
 
-B -->|7. Response| A
+B -->|Response| A
 
-%% LOGGING
 B -->|Logs| E
+```

@@ -56,7 +56,8 @@
                                             .requestMatchers(        "/swagger-ui/**",
                                                     "/v3/api-docs/**"
                                             ).permitAll()
-                                            .requestMatchers("/api/v1/key/admin/**").permitAll() //for people who reading this ,the endpoint is protected by master key in the proxy gateway aka-guts_proxy                                     .requestMatchers("/actuator/health").permitAll()
+                                            .requestMatchers("/api/v1/key/admin/**").permitAll()//for people who reading this ,the endpoint is protected by master key in the proxy gateway aka-guts_proxy                                     .requestMatchers("/actuator/health").permitAll()
+                                            .requestMatchers("/test/timeout").permitAll()
                                             .requestMatchers("/actuator/info").permitAll()
                                             .requestMatchers("/actuator/metrics").hasRole("ADMIN")
                                             .anyRequest().authenticated())

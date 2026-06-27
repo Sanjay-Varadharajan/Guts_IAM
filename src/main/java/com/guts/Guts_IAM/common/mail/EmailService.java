@@ -6,6 +6,8 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 public class EmailService {
@@ -56,6 +58,31 @@ public class EmailService {
         javaMailSender.send(simpleMailMessage);
     }
 
+    public void LoginMail(String toEmail,String userName) {
+
+        SimpleMailMessage mail = new SimpleMailMessage();
+
+        mail.setTo(toEmail);
+        mail.setSubject("Guts_IAM - Login Successful");
+
+        String message = """
+                Hello,
+
+                You have successfully logged in to your Guts_IAM account.
+
+                Login Time: %s
+
+                If this was not you, please secure your account immediately.
+
+                Thank you,
+                Guts IAM Team
+                """.formatted(LocalDateTime.now());
+
+
+        mail.setText(message);
+
+        javaMailSender.send(mail);
+    }
 
     }
 

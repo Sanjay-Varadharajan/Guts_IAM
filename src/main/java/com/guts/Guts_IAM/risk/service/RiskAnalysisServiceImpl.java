@@ -4,6 +4,7 @@ import com.guts.Guts_IAM.auditlog.action.Action;
 import com.guts.Guts_IAM.auditlog.action.AuditStatus;
 import com.guts.Guts_IAM.auditlog.model.AuditLog;
 import com.guts.Guts_IAM.auditlog.repository.AuditRepository;
+import com.guts.Guts_IAM.common.mail.EmailService;
 import com.guts.Guts_IAM.geolocation.utils.GeoUtils;
 import com.guts.Guts_IAM.risk.level.RiskLevel;
 import com.guts.Guts_IAM.risk.result.RiskAnalysisResult;
@@ -23,6 +24,8 @@ public class RiskAnalysisServiceImpl
         implements RiskAnalysisService {
 
     private final AuditRepository auditRepository;
+
+
 
     @Override
     public RiskAnalysisResult analyze(
@@ -59,7 +62,6 @@ public class RiskAnalysisServiceImpl
         });
 
         if(previousLogins.isEmpty()) {
-
             return RiskAnalysisResult.builder()
                     .riskScore(0)
                     .riskLevel(RiskLevel.LOW)

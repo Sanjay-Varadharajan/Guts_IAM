@@ -7,6 +7,7 @@ import com.guts.Guts_IAM.auth.dto.LoginRequest;
 import com.guts.Guts_IAM.common.exception.types.AccountLockedException;
 import com.guts.Guts_IAM.common.exception.types.InvalidCredentialsException;
 import com.guts.Guts_IAM.common.exception.types.ResourceNotFoundException;
+import com.guts.Guts_IAM.common.mail.EmailService;
 import com.guts.Guts_IAM.redis.service.RefreshTokenCacheService;
 import com.guts.Guts_IAM.risk.result.RiskAnalysisResult;
 import com.guts.Guts_IAM.security.userdetails.CustomUserDetails;
@@ -57,6 +58,7 @@ public class AuthService {
     private final UserSessionRepository userSessionRepository;
     private final RefreshTokenCacheService refreshTokenCacheService;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
 
     private static final String DUMMY_HASH ="$2a$12$wN1QnW6yw80KH.XGlDavKuQPAPW7i10O1jyXTxlMP8.XPeR2GKLle";
@@ -155,6 +157,7 @@ public class AuthService {
 
 
         auditLogService.log(user, Action.LOGIN,"AUTH",user.getUserId().toString(),AuditStatus.SUCCESS,"LOGIN ATTEMPT SUCCESSFULLY ACCEPTED",request);
+        emailService.LoginMail(user.getUserMail(),user.getUserName());
         return new JwtResponse(accessToken, refreshToken.getToken(), "Bearer");
     }
 

@@ -1,6 +1,7 @@
 package com.guts.Guts_IAM.geolocation.service;
 
 import com.guts.Guts_IAM.geolocation.dto.GeoLocation;
+import com.maxmind.db.CHMCache;
 import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.model.CityResponse;
 import jakarta.annotation.PostConstruct;
@@ -19,7 +20,9 @@ public class GeoIPService {
     public void init() {
         try {
             var inputStream = new ClassPathResource("geoip/GeoLite2-City.mmdb").getInputStream();
-            dbReader = new DatabaseReader.Builder(inputStream).build();
+            dbReader = new DatabaseReader.Builder(inputStream)
+                    .withCache(new CHMCache())
+                    .build();
         } catch (Exception e) {
             throw new RuntimeException("Failed to load GeoIP database", e);
         }
@@ -34,6 +37,11 @@ public class GeoIPService {
             }
 
             InetAddress ipAddress = InetAddress.getByName(ip);
+            if (ipAddress.isLoopbackAddress()
+                    || ipAddress.isSiteLocalAddress()) {
+                return new GeoLocation("LOCAL", "LOCAL", null, null);
+            }
+
             CityResponse response = dbReader.city(ipAddress);
 
             String country = response.getCountry().getName();

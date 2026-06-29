@@ -126,3 +126,10 @@ account-unlock endpoints
 refresh token controller
 auth controller
 session controller
+
+perf: improve login and signup performance
+- Optimize GeoIP lookup
+- Improve User-Agent parsing
+- Reduce authentication latency
+- Optimize signup flow
+- Minor performance enhancements

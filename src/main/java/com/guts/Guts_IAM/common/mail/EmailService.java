@@ -1,9 +1,12 @@
 package com.guts.Guts_IAM.common.mail;
 
 
+import com.guts.Guts_IAM.geolocation.dto.GeoLocation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -14,7 +17,14 @@ public class EmailService {
 
 
     private final JavaMailSender javaMailSender;
-    
+
+    @Value("${iam.support.phone}")
+    private String supportPhone;
+
+    @Value("${iam.support.email}")
+    private String supportEmail;
+
+    @Async
     public void sendOtp(String toEmail,String otp){
         SimpleMailMessage simpleMailMessage=new SimpleMailMessage();
         simpleMailMessage.setTo(toEmail);
@@ -23,6 +33,7 @@ public class EmailService {
         javaMailSender.send(simpleMailMessage);
     }
 
+    @Async
     public void sendUnlockOtp(String email, String otp) {
         SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
         simpleMailMessage.setTo(email);
@@ -31,6 +42,7 @@ public class EmailService {
         javaMailSender.send(simpleMailMessage);
     }
 
+    @Async
     public void sendVerificationEmail(
             String toEmail,
             String token
@@ -58,26 +70,60 @@ public class EmailService {
         javaMailSender.send(simpleMailMessage);
     }
 
-    public void LoginMail(String toEmail,String userName) {
+    @Async
+    public void LoginMail(String toEmail, String userName, String ipAddress, GeoLocation location, String device, String browser, String operatingSystem) {
 
         SimpleMailMessage mail = new SimpleMailMessage();
 
         mail.setTo(toEmail);
         mail.setSubject("Guts_IAM - Login Successful");
-
         String message = """
-                Hello,
+Hello, %s,
 
-                You have successfully logged in to your Guts_IAM account.
+We noticed a successful sign-in to your Guts IAM account.
 
-                Login Time: %s
+========================================
+       LOGIN SECURITY NOTIFICATION
+========================================
 
-                If this was not you, please secure your account immediately.
+Login Details
+----------------------------------------
+Time             : %s
+IP Address       : %s
+Location         : %s, %s
+Device           : %s
+Browser          : %s
+Operating System : %s
 
-                Thank you,
-                Guts IAM Team
-                """.formatted(LocalDateTime.now());
+----------------------------------------
 
+If you recognize this activity, no further action is required.
+
+If you did NOT sign in, your account may be at risk.
+Please change your password immediately and review your recent account activity.
+
+Need help?
+Contact your administrator or the Guts IAM support team immediately.
+IAM Support: %s
+Email       : %s
+
+Thank you for choosing Guts IAM.
+
+Best regards,
+
+Guts IAM Security Team
+""".formatted(
+                userName,
+                LocalDateTime.now(),
+                ipAddress,
+                location.getCity(),
+                location.getCountry(),
+                device,
+                browser,
+                operatingSystem,
+                supportPhone,
+                supportEmail
+        );
 
         mail.setText(message);
 

@@ -8,6 +8,8 @@ import com.guts.Guts_IAM.common.exception.types.AccountLockedException;
 import com.guts.Guts_IAM.common.exception.types.InvalidCredentialsException;
 import com.guts.Guts_IAM.common.exception.types.ResourceNotFoundException;
 import com.guts.Guts_IAM.common.mail.EmailService;
+import com.guts.Guts_IAM.geolocation.dto.GeoLocation;
+import com.guts.Guts_IAM.geolocation.service.GeoIPService;
 import com.guts.Guts_IAM.redis.service.RefreshTokenCacheService;
 import com.guts.Guts_IAM.risk.result.RiskAnalysisResult;
 import com.guts.Guts_IAM.security.userdetails.CustomUserDetails;
@@ -29,6 +31,8 @@ import com.guts.Guts_IAM.security.util.hashutil.HashUtil;
 import com.guts.Guts_IAM.auditlog.service.AuditService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import nl.basjes.parse.useragent.UserAgent;
+import nl.basjes.parse.useragent.UserAgentAnalyzer;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -59,6 +63,8 @@ public class AuthService {
     private final RefreshTokenCacheService refreshTokenCacheService;
     private final BCryptPasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final GeoIPService geoIPService;
+    private final UserAgentAnalyzer userAgentAnalyzer;
 
 
     private static final String DUMMY_HASH ="$2a$12$wN1QnW6yw80KH.XGlDavKuQPAPW7i10O1jyXTxlMP8.XPeR2GKLle";
@@ -157,7 +163,32 @@ public class AuthService {
 
 
         auditLogService.log(user, Action.LOGIN,"AUTH",user.getUserId().toString(),AuditStatus.SUCCESS,"LOGIN ATTEMPT SUCCESSFULLY ACCEPTED",request);
-        emailService.LoginMail(user.getUserMail(),user.getUserName());
+        String ip=auditLogService.extractIp(request);
+        GeoLocation geo = geoIPService.getLocation(ip);
+        String userAgentString =
+                request.getHeader("User-Agent");
+
+
+
+        UserAgent agent =
+                userAgentAnalyzer.parse(userAgentString);
+
+        String browser =
+                agent.getValue("AgentName");
+        String operatingSystem =
+                agent.getValue("OperatingSystemName");
+
+
+        String device;
+
+        if (userAgentString.contains("Mobile")) {
+            device = "Mobile";
+        } else if (userAgentString.contains("Tablet")) {
+            device = "Tablet";
+        } else {
+            device = "Desktop";
+        }
+        emailService.LoginMail(user.getUserMail(),user.getUserName(),ip,geo,device,browser,operatingSystem);
         return new JwtResponse(accessToken, refreshToken.getToken(), "Bearer");
     }
 

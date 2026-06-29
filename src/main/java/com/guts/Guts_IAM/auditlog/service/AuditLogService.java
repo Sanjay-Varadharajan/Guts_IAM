@@ -149,7 +149,7 @@ public class AuditLogService {
         }
     }
 
-    private String extractIp(HttpServletRequest request) {
+    public   String extractIp(HttpServletRequest request) {
 
         String ip = request.getHeader("X-Forwarded-For");
 

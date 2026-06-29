@@ -21,6 +21,7 @@ import java.util.List;
 public class SessionService {
 
     private final UserSessionRepository sessionRepository;
+    private final UserAgentAnalyzer userAgentAnalyzer;
 
     public void createSession(User user,
                               String jwt,
@@ -29,15 +30,9 @@ public class SessionService {
         String userAgentString =
                 request.getHeader("User-Agent");
 
-        UserAgentAnalyzer analyzer =
-                UserAgentAnalyzer
-                        .newBuilder()
-                        .hideMatcherLoadStats()
-                        .withCache(1000)
-                        .build();
 
-        UserAgent agent =
-                analyzer.parse(userAgentString);
+        UserAgent agent=userAgentAnalyzer.parse(userAgentString);
+
 
         String browser =
                 agent.getValue("AgentName");

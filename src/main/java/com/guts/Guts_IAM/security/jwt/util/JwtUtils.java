@@ -1,6 +1,7 @@
 package com.guts.Guts_IAM.security.jwt.util;
 
 import com.guts.Guts_IAM.user.model.User;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -11,6 +12,7 @@ import java.security.Key;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 public class JwtUtils {
@@ -26,8 +28,11 @@ public class JwtUtils {
 
 
     public String generateAccessToken(User user) {
+
+        String jit= UUID.randomUUID().toString();
         return Jwts.builder()
                 .setSubject(user.getUserMail())
+                .setId(jit)
                 .claim("roles",
                         user.getRoles()==null
                                 ?List.of()
@@ -85,5 +90,13 @@ public class JwtUtils {
 
     public long getRefreshTokenExpiry() {
         return REFRESH_TOKEN_EXPIRY;
+    }
+
+    public Claims parseToken(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 }

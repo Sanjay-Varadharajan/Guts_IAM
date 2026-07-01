@@ -7,6 +7,7 @@ import com.guts.Guts_IAM.auth.dto.LoginRequest;
 import com.guts.Guts_IAM.common.exception.types.AccountLockedException;
 import com.guts.Guts_IAM.common.exception.types.InvalidCredentialsException;
 import com.guts.Guts_IAM.common.exception.types.ResourceNotFoundException;
+import com.guts.Guts_IAM.common.exception.types.TokenNotFoundException;
 import com.guts.Guts_IAM.common.mail.EmailService;
 import com.guts.Guts_IAM.geolocation.dto.GeoLocation;
 import com.guts.Guts_IAM.geolocation.service.GeoIPService;
@@ -29,10 +30,12 @@ import com.guts.Guts_IAM.security.jwt.util.JwtUtils;
 import com.guts.Guts_IAM.security.jwt.dto.JwtResponse;
 import com.guts.Guts_IAM.security.util.hashutil.HashUtil;
 import com.guts.Guts_IAM.auditlog.service.AuditService;
+import io.jsonwebtoken.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import nl.basjes.parse.useragent.UserAgent;
 import nl.basjes.parse.useragent.UserAgentAnalyzer;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -44,6 +47,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -65,6 +69,7 @@ public class AuthService {
     private final EmailService emailService;
     private final GeoIPService geoIPService;
     private final UserAgentAnalyzer userAgentAnalyzer;
+    private final RedisTemplate redisTemplate;
 
 
     private static final String DUMMY_HASH ="$2a$12$wN1QnW6yw80KH.XGlDavKuQPAPW7i10O1jyXTxlMP8.XPeR2GKLle";
@@ -226,85 +231,152 @@ public class AuthService {
     
             return savedToken;
         }
-    
 
 
 
 
-    public void logout(String refreshTokenStr, HttpServletRequest httpServletRequest) {
-        Optional<RefreshToken>  refreshTokenCheck=refreshTokenRepository.findByToken(refreshTokenStr);
 
+    public void logout(String refreshTokenStr, HttpServletRequest request) {
 
-        if(refreshTokenCheck.isEmpty()){
-            auditLogService.log(
-                    null,
-                    Action.REFRESH_TOKEN,
-                    "AUTH",
-                    "UNKNOWN",
-                    AuditStatus.FAILED,
-                    "Invalid refresh token used",
-                    httpServletRequest
-            );
-            throw new ResourceNotFoundException(
-                    "Refresh Token Not Found",
-                    "RESOURCE_NOT_FOUND",
-                    HttpStatus.NOT_FOUND
-            );
-        }
+        RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenStr)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Refresh Token Not Found",
+                        "RESOURCE_NOT_FOUND",
+                        HttpStatus.NOT_FOUND
+                ));
 
-        auditLogService.log(refreshTokenCheck.get().getUser(), Action.LOGOUT,"AUTH",refreshTokenCheck.get().getUser().getUserId().toString(),AuditStatus.SUCCESS,"LOGOUT SUCCESSFULLY INITIATED AND FINISHED",httpServletRequest);
+        User user = refreshToken.getUser();
 
-        RefreshToken token =
-                refreshTokenCheck.get();
-
-        Integer userId =
-                token.getUser()
-                        .getUserId();
-
-        refreshTokenCacheService.deleteToken(
-                refreshTokenStr
-        );
-
-        refreshTokenCacheService
-                .removeTokenFromUser(
-                        userId,
-                        refreshTokenStr
-                );
-
-
+        refreshTokenCacheService.deleteToken(refreshTokenStr);
+        refreshTokenCacheService.removeTokenFromUser(user.getUserId(), refreshTokenStr);
         refreshTokenRepository.deleteByToken(refreshTokenStr);
 
-        String authHeader=httpServletRequest.getHeader("Authorization");
-        String accessToken = null;
+        auditLogService.log(
+                user,
+                Action.LOGOUT,
+                "AUTH",
+                user.getUserId().toString(),
+                AuditStatus.SUCCESS,
+                "Logout success",
+                request
+        );
 
-        if(authHeader != null &&
-                authHeader.startsWith("Bearer ")) {
+        String authHeader = request.getHeader("Authorization");
 
-            accessToken = authHeader.substring(7);
-        }
-        Optional<UserSession> optionalSession =
-                userSessionRepository.findByJwtToken(accessToken);
-
-        if(optionalSession.isPresent()) {
-
-            UserSession session = optionalSession.get();
-
-            session.setRevoked(true);
-
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             auditLogService.log(
-                    session.getUser(),
+                    user,
                     Action.SESSION_REVOKE,
                     "SESSION",
-                    session.getId().toString(),
-                    AuditStatus.SUCCESS,
-                    "Session revoked during logout",
-                    httpServletRequest
+                    "MISSING_AUTH_HEADER",
+                    AuditStatus.FAILED,
+                    "Missing Authorization header during logout",
+                    request
             );
-
-            userSessionRepository.save(session);
+            return;
         }
 
+        String accessToken = authHeader.substring(7);
+
+        try {
+
+            Claims claims= jwtUtils.parseToken(accessToken);
+            String jti = claims.getId();
+            long ttl = claims.getExpiration().getTime() - System.currentTimeMillis();
+
+            if (ttl > 0) {
+
+                Boolean exists = redisTemplate.hasKey("blacklist:jti:" + jti);
+                if (Boolean.TRUE.equals(exists)) {
+                    return;
+                }
+                redisTemplate.opsForValue().set(
+                        "blacklist:jti:" + jti,
+                        "true",
+                        Duration.ofMillis(ttl)
+                );
+            }
+
+            auditLogService.log(
+                    user,
+                    Action.SESSION_REVOKE,
+                    "SESSION",
+                    jti,
+                    AuditStatus.SUCCESS,
+                    "JWT revoked via blacklist",
+                    request
+            );
+
+        } catch (ExpiredJwtException e) {
+
+            auditLogService.log(
+                    user,
+                    Action.SESSION_REVOKE,
+                    "SESSION",
+                    "EXPIRED_JWT",
+                    AuditStatus.FAILED,
+                    "JWT already expired during logout",
+                    request
+            );
+
+        } catch (JwtException e) {
+
+            auditLogService.log(
+                    user,
+                    Action.SESSION_REVOKE,
+                    "SESSION",
+                    "INVALID_JWT",
+                    AuditStatus.FAILED,
+                    "JWT parsing failed during logout",
+                    request
+            );
+        }
     }
+
+
+    public void logoutAll(Authentication authentication, HttpServletRequest request) {
+
+        CustomUserDetails userDetails =
+                (CustomUserDetails) authentication.getPrincipal();
+
+        Integer userId = userDetails.getUserId();
+
+        refreshTokenRepository.deleteByUser_UserId(userId);
+
+        Set<Object> tokens = refreshTokenCacheService.getUserTokens(userId);
+
+        if (tokens != null) {
+            for (Object token : tokens) {
+                refreshTokenCacheService.deleteToken(token.toString());
+            }
+        }
+
+        refreshTokenCacheService.deleteUserTokenSet(userId);
+
+        List<UserSession> sessions =
+                userSessionRepository.findByUserUserIdAndRevokedFalse(userId);
+
+        sessions.forEach(s -> s.setRevoked(true));
+        userSessionRepository.saveAll(sessions);
+
+        User user = userRepository.findById(userId).orElseThrow();
+
+        auditLogService.log(
+                user,
+                Action.LOGOUT_ALL,
+                "AUTH",
+                userId.toString(),
+                AuditStatus.SUCCESS,
+                "Logout all devices",
+                request
+        );
+    }
+
+
+
+
+
+
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public int updateFailedAttempts(User user) {
@@ -325,52 +397,4 @@ public class AuthService {
         return attempts;
     }
 
-
-    public void logoutAll(Authentication authentication,
-                          HttpServletRequest request) {
-
-        CustomUserDetails userDetails =
-                (CustomUserDetails)
-                        authentication.getPrincipal();
-
-        Integer userId =
-                userDetails.getUserId();
-
-
-        Set<Object> tokens =
-                refreshTokenCacheService
-                        .getUserTokens(userId);
-
-        refreshTokenRepository.deleteByUser_UserId(userId);
-
-
-        if(tokens != null){
-
-            for(Object token : tokens){
-
-                refreshTokenCacheService
-                        .deleteToken(
-                                token.toString()
-                        );
-            }
-        }
-
-        refreshTokenCacheService
-                .deleteUserTokenSet(userId);
-
-        List<UserSession> sessions =
-                userSessionRepository
-                        .findByUserUserIdAndRevokedFalse(userId);
-
-        sessions.forEach(session -> {
-            session.setRevoked(true);
-        });
-
-        userSessionRepository.saveAll(sessions);
-
-        User user=userRepository.findById(userId).get();
-
-        auditLogService.log(user, Action.LOGOUT_ALL,"AUTH",userId.toString(),AuditStatus.SUCCESS,"LOGOUT FROM ALL DEVICE SUCCESSFULLY INITIATED AND FINISHED",request);
-
-    }
-    }
+}

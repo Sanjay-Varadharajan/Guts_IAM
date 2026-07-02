@@ -7,6 +7,7 @@
         import org.springframework.http.HttpStatus;
         import org.springframework.http.ResponseEntity;
         import org.springframework.web.bind.MethodArgumentNotValidException;
+        import org.springframework.web.bind.MissingServletRequestParameterException;
         import org.springframework.web.bind.annotation.ExceptionHandler;
         import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -227,6 +228,27 @@
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
             }
 
+
+            @ExceptionHandler(HandleMissingParamException.class)
+            public ResponseEntity<ApiErrorResponse> handleCustomMissingParamException(
+                    HandleMissingParamException ex,
+                    HttpServletRequest request
+            ) {
+
+                Map<String, String> exceptionBody = new HashMap<>();
+                exceptionBody.put("Exception", ex.getClass().getSimpleName());
+
+                ApiErrorResponse response = new ApiErrorResponse(
+                        ex.getMessage(),
+                        HttpStatus.BAD_REQUEST ,
+                        "BAD_REQUEST",
+                        exceptionBody,
+                        LocalDateTime.now(),
+                        request.getRequestURI()
+                );
+
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
 
 
 

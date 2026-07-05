@@ -3,6 +3,7 @@ package com.guts.Guts_IAM.apikey;
 
 import com.guts.Guts_IAM.common.exception.types.HandleMissingParamException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +24,7 @@ public class ApiKeyController {
     @PostMapping("/generate")
     public ResponseEntity<String> generate(
             @RequestParam
+            @Email
             String owner,
             HttpServletRequest httpServletRequest
     )throws HandleMissingParamException {
@@ -32,7 +34,7 @@ public class ApiKeyController {
 
     @DeleteMapping("/revoke")
     public ResponseEntity<String> revoke(
-            @RequestParam String apiKey,
+            @RequestParam  String apiKey,
             HttpServletRequest httpServletRequest
     ) {
         apiKeyService.revokeApiKey(apiKey,httpServletRequest);

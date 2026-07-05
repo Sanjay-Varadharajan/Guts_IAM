@@ -5,6 +5,10 @@ import com.guts.Guts_IAM.auditlog.action.Action;
 import com.guts.Guts_IAM.auditlog.action.AuditStatus;
 import com.guts.Guts_IAM.auditlog.service.AuditLogService;
 import com.guts.Guts_IAM.common.exception.types.HandleMissingParamException;
+import com.guts.Guts_IAM.common.exception.types.UserNameNotFoundException;
+import com.guts.Guts_IAM.security.util.hashutil.HashUtil;
+import com.guts.Guts_IAM.user.model.User;
+import com.guts.Guts_IAM.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -22,40 +26,62 @@ public class ApiKeyService {
 
     private final AuditLogService auditLogService;
 
+    private final ApikeyRepository apikeyRepository;
+
+    private final UserRepository userRepository;
+
     private static final String PREFIX = "api_key:";
 
 
 
-    public String generateApiKey(String owner, HttpServletRequest httpServletRequest) throws HandleMissingParamException {
+                    public String generateApiKey(String owner, HttpServletRequest httpServletRequest) throws HandleMissingParamException {
 
 
-        if(owner==null || owner.isBlank()){
-            throw new HandleMissingParamException(
-                    "Required Param is Missing",
-                    "BAD_REQUEST",
-                    HttpStatus.BAD_REQUEST
-            );
-        }
-
-        String apiKey = "guts_" + UUID.randomUUID();
-
-        redisTemplate.opsForValue().set(PREFIX + apiKey, "ACTIVE");
-
-        redisTemplate.opsForValue().set(PREFIX + apiKey + ":owner", owner);
-
-        auditLogService.log(
-                null,
-                Action.GENERATED_AUDIT_LOG,
-                "API_KEY",
-                owner,
-                AuditStatus.SUCCESS,
-                "api key is generated successfully",
-                httpServletRequest
-        );
+                        if(owner==null || owner.isBlank()){
+                            throw new HandleMissingParamException(
+                                    "Required Param is Missing",
+                                    "BAD_REQUEST",
+                                    HttpStatus.BAD_REQUEST
+                            );
+                        }
 
 
-        return apiKey;
-    }
+                        User user=userRepository.findByUserMailAndActiveTrue(owner).orElseThrow(
+                                ()->new UserNameNotFoundException(
+                                        "user not found",
+                                        "NOT_FOUND",
+                                        HttpStatus.NOT_FOUND
+                                )
+                        );
+                        ApiKey apiKeyObj=new ApiKey();
+                        apiKeyObj.setUserId(user.getUserId());
+
+
+
+
+                        String apiKey = "guts_" + UUID.randomUUID();
+
+                        apiKeyObj.setHashedApiKey(HashUtil.sha256(apiKey));
+                        apikeyRepository.save(apiKeyObj);
+
+                        redisTemplate.opsForValue().set(PREFIX + apiKey, Status.ACTIVE.name());
+
+                        redisTemplate.opsForValue().set(PREFIX + apiKey + ":owner", owner);
+
+                        auditLogService.log(
+                                null,
+                                Action.GENERATED_AUDIT_LOG,
+                                "API_KEY",
+                                owner,
+                                AuditStatus.SUCCESS,
+                                "api key is generated successfully",
+                                httpServletRequest
+                        );
+
+
+
+                        return apiKey;
+                    }
 
     public void revokeApiKey(String apiKey,HttpServletRequest httpServletRequest    ) {
         redisTemplate.delete(PREFIX + apiKey);

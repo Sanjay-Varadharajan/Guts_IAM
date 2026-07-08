@@ -19,6 +19,7 @@ public class UserSession {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "jwt_token", length = 2048)
     private String jwtToken;
 
     private String device;

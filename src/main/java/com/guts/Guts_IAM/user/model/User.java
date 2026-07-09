@@ -2,6 +2,7 @@
     
     
     import com.fasterxml.jackson.annotation.JsonIgnore;
+    import com.guts.Guts_IAM.passwordtracking.PasswordTracker;
     import com.guts.Guts_IAM.role.model.Role;
     import jakarta.persistence.*;
     import jakarta.validation.constraints.Email;
@@ -11,6 +12,9 @@
     import lombok.NoArgsConstructor;
     import org.springframework.data.annotation.CreatedDate;
     import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+    import java.util.ArrayList;
+    import java.util.List;
     import java.util.Set;
 
 
@@ -78,4 +82,8 @@
         private int failedAttempts = 0;
 
         private LocalDateTime lockTime;
+
+        @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+        private List<PasswordTracker> passwordHistory = new ArrayList<>();
+
     }

@@ -10,6 +10,7 @@ import com.guts.Guts_IAM.auth.dto.ResetPasswordRequest;
 import com.guts.Guts_IAM.common.exception.types.TokenNotFoundException;
 import com.guts.Guts_IAM.common.exception.types.UserNameNotFoundException;
 import com.guts.Guts_IAM.common.mail.EmailService;
+import com.guts.Guts_IAM.passwordtracking.PasswordTrackerService;
 import com.guts.Guts_IAM.user.model.User;
 import com.guts.Guts_IAM.user.repository.UserRepository;
 import com.guts.Guts_IAM.common.util.OtpUtil;
@@ -18,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -31,8 +33,7 @@ public class PasswordAuthService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final AuditLogService auditLogService;
-
-
+    private final PasswordTrackerService passwordTrackerService;
     private static final int OTP_LENGTH = 6;
 
 
@@ -101,6 +102,7 @@ public class PasswordAuthService {
         );
     }
 
+    @Transactional
     public void resetPassword(ResetPasswordRequest req, HttpServletRequest httpServletRequest) {
 
         Optional<PasswordResetOtp> optionalOtp =
@@ -203,7 +205,9 @@ public class PasswordAuthService {
             throw new RuntimeException("Invalid OTP");
         }
 
-        user.setUserPassword(passwordEncoder.encode(req.newPassword()));
+        String encodedPassword = passwordEncoder.encode(req.newPassword());
+
+        user.setUserPassword(encodedPassword);
         user.setTokenVersion(user.getTokenVersion() + 1);
 
         userRepository.save(user);
@@ -218,6 +222,7 @@ public class PasswordAuthService {
                 httpServletRequest
         );
 
+        passwordTrackerService.trackChange(encodedPassword,user);
         otpRepository.deleteById(req.email());
     }
 }

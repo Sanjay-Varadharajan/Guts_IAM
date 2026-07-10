@@ -2,6 +2,8 @@ package com.guts.Guts_IAM.user.controller.admin;
 
 
 import com.guts.Guts_IAM.common.response.ApiResponse;
+import com.guts.Guts_IAM.passwordtracking.PasswordTracker;
+import com.guts.Guts_IAM.passwordtracking.TrackDto;
 import com.guts.Guts_IAM.role.dto.RoleRequestDto;
 import com.guts.Guts_IAM.role.dto.RoleResponseDto;
 import com.guts.Guts_IAM.user.dto.admin.AdminRequestDto;
@@ -235,6 +237,29 @@ public class AdminController {
         );
 
         return ResponseEntity.ok(response);
-
     }
+
+    @GetMapping("/logs/passwordtracking/all")
+    public ResponseEntity<ApiResponse<Page<TrackDto>>> allPasswordChange(Authentication authentication
+                                                                                , HttpServletRequest httpServletRequest,
+                                                                         @PageableDefault(
+                                                                                        page = 0,
+                                                                                        size = 10,
+                                                                                        sort = "passwordChangedAt",
+                                                                                        direction = Sort.Direction.DESC
+                                                                                )Pageable pageable
+                                                                                ){
+
+        Page<TrackDto> passwordTrackers=adminService.allPasswordChange(authentication,httpServletRequest,pageable);
+        ApiResponse<Page<TrackDto>> apiResponse=
+                new ApiResponse<>(
+                        true,
+                        "FETCHED_PASSWORD_LOGS",
+                        passwordTrackers,
+                        LocalDateTime.now()
+                );
+
+        return ResponseEntity.ok(apiResponse);
+    }
+
 }

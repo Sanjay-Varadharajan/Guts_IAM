@@ -7,6 +7,9 @@ import com.guts.Guts_IAM.auditlog.export.service.DownloadAuditLogService;
 import com.guts.Guts_IAM.auditlog.model.AuditLog;
 import com.guts.Guts_IAM.auditlog.service.AuditLogService;
 import com.guts.Guts_IAM.common.exception.types.UserNameNotFoundException;
+import com.guts.Guts_IAM.passwordtracking.PasswordTracker;
+import com.guts.Guts_IAM.passwordtracking.PasswordTrackerRepository;
+import com.guts.Guts_IAM.passwordtracking.TrackDto;
 import com.guts.Guts_IAM.role.dto.RoleRequestDto;
 import com.guts.Guts_IAM.role.dto.RoleResponseDto;
 import com.guts.Guts_IAM.role.model.Role;
@@ -23,6 +26,8 @@ import com.guts.Guts_IAM.user.stats.UserStatsForAdmin;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,12 +61,14 @@ public class AdminService {
 
     private final DownloadAuditLogService downloadAuditLogService;
 
+    private final PasswordTrackerRepository passwordTrackerRepository;
+
 
     public Page<UserResponseDto> getAllActiveUsers(Authentication authentication, Pageable pageable, HttpServletRequest request) {
 
-        Optional<User> userExisting1=userRepository.findByUserMailAndActiveTrue(authentication.getName());
+        Optional<User> userExisting1 = userRepository.findByUserMailAndActiveTrue(authentication.getName());
 
-        if(userExisting1.isEmpty()){
+        if (userExisting1.isEmpty()) {
 
             auditLogService.log(
                     null,
@@ -73,17 +80,17 @@ public class AdminService {
                     request
             );
 
-            throw new UserNameNotFoundException(authentication.getName()+" Not found","NOT_FOUND",HttpStatus.NOT_FOUND);
+            throw new UserNameNotFoundException(authentication.getName() + " Not found", "NOT_FOUND", HttpStatus.NOT_FOUND);
 
         }
 
-        User userExisting=userExisting1.get();
+        User userExisting = userExisting1.get();
 
-                Set<String> allowedSort=Set.of("userCreatedOn","userMail");
+        Set<String> allowedSort = Set.of("userCreatedOn", "userMail");
 
         pageable.getSort().forEach(order ->
         {
-            if(!allowedSort.contains(order.getProperty())){
+            if (!allowedSort.contains(order.getProperty())) {
                 auditLogService.log(
                         userExisting,
                         Action.VIEW_ALL_AUDIT_LOG,
@@ -95,13 +102,11 @@ public class AdminService {
                 );
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
-                        "Invalid Sort field: "+order.getProperty()
+                        "Invalid Sort field: " + order.getProperty()
                 );
             }
         });
-        Page<User> activeUsers=userRepository.findByActiveTrue(pageable);
-
-
+        Page<User> activeUsers = userRepository.findByActiveTrue(pageable);
 
 
         auditLogService.log(
@@ -122,9 +127,9 @@ public class AdminService {
     public UserResponseDto updateUserStatus(Integer userId, Authentication authentication, HttpServletRequest request) {
 
 
-        Optional<User> userExisting1=userRepository.findByUserMailAndActiveTrue(authentication.getName());
+        Optional<User> userExisting1 = userRepository.findByUserMailAndActiveTrue(authentication.getName());
 
-        if(userExisting1.isEmpty()){
+        if (userExisting1.isEmpty()) {
 
             auditLogService.log(
                     null,
@@ -136,17 +141,17 @@ public class AdminService {
                     request
             );
 
-            throw new UserNameNotFoundException(authentication.getName()+" Not found","NOT_FOUND",HttpStatus.NOT_FOUND);
+            throw new UserNameNotFoundException(authentication.getName() + " Not found", "NOT_FOUND", HttpStatus.NOT_FOUND);
 
         }
 
 
-        User loggedInAdmin=userExisting1.get();
+        User loggedInAdmin = userExisting1.get();
 
 
-        Optional<User> user=userRepository.findById(userId);
+        Optional<User> user = userRepository.findById(userId);
 
-        if(user.isEmpty()){
+        if (user.isEmpty()) {
             auditLogService.log(
                     null,
                     Action.UPDATE_USER_STATUS,
@@ -157,11 +162,11 @@ public class AdminService {
                     request
             );
 
-            throw new UserNameNotFoundException(userId+" Not found","NOT_FOUND",HttpStatus.NOT_FOUND);
+            throw new UserNameNotFoundException(userId + " Not found", "NOT_FOUND", HttpStatus.NOT_FOUND);
 
         }
 
-        User user1=user.get();
+        User user1 = user.get();
 
         if (loggedInAdmin.getUserId().equals(userId)) {
             auditLogService.log(
@@ -185,7 +190,7 @@ public class AdminService {
         user1.setActive(!user1.isActive());
         userRepository.save(user1);
 
-        adminStatsService.updateUserStatusStats(wasActive,!wasActive);
+        adminStatsService.updateUserStatusStats(wasActive, !wasActive);
 
 
         auditLogService.log(
@@ -202,9 +207,9 @@ public class AdminService {
     }
 
     public Page<AuditLogDto> getAllAuditLog(Authentication authentication, Pageable pageable, HttpServletRequest request) {
-        Optional<User> userExisting1=userRepository.findByUserMailAndActiveTrue(authentication.getName());
+        Optional<User> userExisting1 = userRepository.findByUserMailAndActiveTrue(authentication.getName());
 
-        if(userExisting1.isEmpty()){
+        if (userExisting1.isEmpty()) {
 
             auditLogService.log(
                     null,
@@ -216,25 +221,25 @@ public class AdminService {
                     request
             );
 
-            throw new UserNameNotFoundException(authentication.getName()+" Not found","NOT_FOUND",HttpStatus.NOT_FOUND);
+            throw new UserNameNotFoundException(authentication.getName() + " Not found", "NOT_FOUND", HttpStatus.NOT_FOUND);
 
         }
 
-        User loggedInAdmin=userExisting1.get();
+        User loggedInAdmin = userExisting1.get();
 
 
-                        Set<String> allowedSort=Set.of("auditedOn");
+        Set<String> allowedSort = Set.of("auditedOn");
 
         pageable.getSort().forEach(order -> {
-            if (!allowedSort.contains(order.getProperty())){
+            if (!allowedSort.contains(order.getProperty())) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
-                        "Invalid Sort Field "+order.getProperty()
+                        "Invalid Sort Field " + order.getProperty()
                 );
             }
         });
 
-        Page<AuditLog> auditLogs=auditRepository.findAll(pageable);
+        Page<AuditLog> auditLogs = auditRepository.findAll(pageable);
 
 
         auditLogService.log(
@@ -250,9 +255,9 @@ public class AdminService {
     }
 
     public UserResponseDto viewProfile(Authentication authentication, HttpServletRequest request) {
-        Optional<User> userExisting1=userRepository.findByUserMailAndActiveTrue(authentication.getName());
+        Optional<User> userExisting1 = userRepository.findByUserMailAndActiveTrue(authentication.getName());
 
-        if(userExisting1.isEmpty()){
+        if (userExisting1.isEmpty()) {
             auditLogService.log(
                     null,
                     Action.VIEW_PROFILE,
@@ -263,16 +268,14 @@ public class AdminService {
                     request
             );
 
-            throw new UserNameNotFoundException(authentication.getName()+" Not found","NOT_FOUND",HttpStatus.NOT_FOUND);
+            throw new UserNameNotFoundException(authentication.getName() + " Not found", "NOT_FOUND", HttpStatus.NOT_FOUND);
 
         }
 
-        User loggedInAdmin=userExisting1.get();
+        User loggedInAdmin = userExisting1.get();
 
 
-        UserResponseDto userResponseDto=new UserResponseDto(loggedInAdmin);
-
-        
+        UserResponseDto userResponseDto = new UserResponseDto(loggedInAdmin);
 
 
         auditLogService.log(
@@ -284,7 +287,6 @@ public class AdminService {
                 "Profile Viewed Successfully",
                 request
         );
-
 
 
         return userResponseDto;
@@ -312,7 +314,7 @@ public class AdminService {
         User userExisting = userExisting1.get();
         String oldName = userExisting.getUserName();
 
-        if(oldName.equals(adminRequestDto.getAdminName())) {
+        if (oldName.equals(adminRequestDto.getAdminName())) {
 
             auditLogService.log(
                     userExisting,
@@ -380,11 +382,10 @@ public class AdminService {
 
     public RoleResponseDto addRoles(RoleRequestDto dto, HttpServletRequest httpServletRequest, Authentication authentication) {
 
-        Optional<User> userExisting1=userRepository.findByUserMailAndActiveTrue(authentication.getName());
+        Optional<User> userExisting1 = userRepository.findByUserMailAndActiveTrue(authentication.getName());
 
 
-
-        if(userExisting1.isEmpty()){
+        if (userExisting1.isEmpty()) {
             auditLogService.log(
                     null,
                     Action.ADDED_NEW_ROLE,
@@ -395,12 +396,12 @@ public class AdminService {
                     httpServletRequest
             );
 
-            throw new UserNameNotFoundException(authentication.getName()+" Not found","NOT_FOUND",HttpStatus.NOT_FOUND);
+            throw new UserNameNotFoundException(authentication.getName() + " Not found", "NOT_FOUND", HttpStatus.NOT_FOUND);
         }
 
-        User admin=userExisting1.get();
+        User admin = userExisting1.get();
 
-        if(roleRepository.existsByName(dto.getRoleName().trim().toUpperCase())) {
+        if (roleRepository.existsByName(dto.getRoleName().trim().toUpperCase())) {
 
             auditLogService.log(
                     admin,
@@ -418,12 +419,11 @@ public class AdminService {
             );
         }
 
-        Role role=new Role();
+        Role role = new Role();
         role.setName(dto.getRoleName());
         roleRepository.save(role);
 
-        RoleResponseDto responseDto=new RoleResponseDto(role);
-
+        RoleResponseDto responseDto = new RoleResponseDto(role);
 
 
         auditLogService.log(
@@ -469,7 +469,7 @@ public class AdminService {
         ByteArrayInputStream file =
                 downloadAuditLogService.downloadMyLogs(authentication.getName());
 
-        User user=userExisting.get();
+        User user = userExisting.get();
 
         auditLogService.log(
                 user,
@@ -514,7 +514,7 @@ public class AdminService {
         ByteArrayInputStream file =
                 downloadAuditLogService.downloadAllLogs();
 
-        User user=userExisting.get();
+        User user = userExisting.get();
 
         auditLogService.log(
                 user,
@@ -551,9 +551,9 @@ public class AdminService {
             );
         }
 
-        User user=userExisting.get();
+        User user = userExisting.get();
 
-        AdminStats stats=adminStatsService.getStatsSnapshot();
+        AdminStats stats = adminStatsService.getStatsSnapshot();
         auditLogService.log(
                 user,
                 Action.LOAD_STATS,
@@ -566,4 +566,53 @@ public class AdminService {
 
         return new UserStatsForAdmin(stats);
     }
+
+    public Page<TrackDto> allPasswordChange(Authentication authentication, HttpServletRequest httpServletRequest, Pageable pageable) {
+        Optional<User> user = userRepository.findByUserMailAndActiveTrue(authentication.getName());
+
+        if (user.isEmpty()) {
+
+            auditLogService.log(
+                    null,
+                    Action.VIEW_PASSWORD_TRACK_LOG,
+                    "PASSWORD",
+                    authentication.getName(),
+                    AuditStatus.FAILED,
+                    "no admin found",
+                    httpServletRequest
+            );
+            throw new UserNameNotFoundException(
+                    "user not found",
+                    "NOT_FOUND",
+                    HttpStatus.NOT_FOUND
+            );
 }
+            Page<PasswordTracker> passwordTrackers = passwordTrackerRepository.findAll(pageable);
+        auditLogService.log(
+                user.get(),
+                Action.VIEW_ALL_ACTIVE_USER,
+                "PASSWORD",
+                user.get().getUserId().toString(),
+                AuditStatus.SUCCESS,
+                "fetched tracked logs of password",
+                httpServletRequest
+        );
+
+        return passwordTrackers.map(this::mapToDto);
+
+    }
+
+    private TrackDto mapToDto(PasswordTracker tracker) {
+
+        TrackDto dto = new TrackDto();
+
+        dto.setTrackerId(tracker.getTrackerId());
+        dto.setPasswordChangedAt(tracker.getPasswordChangedAt());
+
+        if (tracker.getUser() != null) {
+            dto.setUserId(tracker.getUser().getUserId());
+        }
+
+        return dto;
+    }
+    }

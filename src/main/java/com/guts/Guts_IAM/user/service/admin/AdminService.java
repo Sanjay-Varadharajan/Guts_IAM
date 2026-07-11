@@ -6,6 +6,7 @@ import com.guts.Guts_IAM.auditlog.action.AuditStatus;
 import com.guts.Guts_IAM.auditlog.export.service.DownloadAuditLogService;
 import com.guts.Guts_IAM.auditlog.model.AuditLog;
 import com.guts.Guts_IAM.auditlog.service.AuditLogService;
+import com.guts.Guts_IAM.common.exception.types.ResourceNotFoundException;
 import com.guts.Guts_IAM.common.exception.types.UserNameNotFoundException;
 import com.guts.Guts_IAM.passwordtracking.PasswordTracker;
 import com.guts.Guts_IAM.passwordtracking.PasswordTrackerRepository;
@@ -590,7 +591,7 @@ public class AdminService {
             Page<PasswordTracker> passwordTrackers = passwordTrackerRepository.findAll(pageable);
         auditLogService.log(
                 user.get(),
-                Action.VIEW_ALL_ACTIVE_USER,
+                Action.VIEW_PASSWORD_TRACK_LOG,
                 "PASSWORD",
                 user.get().getUserId().toString(),
                 AuditStatus.SUCCESS,
@@ -615,4 +616,57 @@ public class AdminService {
 
         return dto;
     }
+
+    public Page<TrackDto> viewPasswordTrackById(long userId, Authentication authentication, HttpServletRequest httpServletRequest, Pageable pageable) {
+
+        Optional<User> user = userRepository.findByUserMailAndActiveTrue(authentication.getName());
+
+        if (user.isEmpty()) {
+
+            auditLogService.log(
+                    null,
+                    Action.VIEW_PASSWORD_TRACK_LOG,
+                    "PASSWORD",
+                    authentication.getName(),
+                    AuditStatus.FAILED,
+                    "no admin found",
+                    httpServletRequest
+            );
+            throw new UserNameNotFoundException(
+                    "user not found",
+                    "NOT_FOUND",
+                    HttpStatus.NOT_FOUND
+            );
+        }
+        Page<PasswordTracker> passwordTrackers = passwordTrackerRepository.findByUserUserId(userId,pageable);
+
+        if (passwordTrackers.isEmpty()){
+            auditLogService.log(
+                    user.get(),
+                    Action.VIEW_PASSWORD_TRACK_LOG,
+                    "PASSWORD",
+                    authentication.getName(),
+                    AuditStatus.FAILED,
+                    "no resource id found",
+                    httpServletRequest
+            );
+            throw new ResourceNotFoundException(
+                    userId+" userId not found",
+                    "NOT_FOUND",
+                    HttpStatus.NOT_FOUND
+            );
+        }
+        auditLogService.log(
+                user.get(),
+                Action.VIEW_PASSWORD_TRACK_LOG,
+                "PASSWORD",
+                user.get().getUserId().toString(),
+                AuditStatus.SUCCESS,
+                "fetched tracked logs of password",
+                httpServletRequest
+        );
+
+        return passwordTrackers.map(this::mapToDto);
     }
+
+}

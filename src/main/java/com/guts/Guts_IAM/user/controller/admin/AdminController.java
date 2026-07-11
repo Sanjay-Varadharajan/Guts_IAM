@@ -240,6 +240,7 @@ public class AdminController {
     }
 
     @GetMapping("/logs/passwordtracking/all")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Page<TrackDto>>> allPasswordChange(Authentication authentication
                                                                                 , HttpServletRequest httpServletRequest,
                                                                          @PageableDefault(
@@ -254,7 +255,7 @@ public class AdminController {
         ApiResponse<Page<TrackDto>> apiResponse=
                 new ApiResponse<>(
                         true,
-                        "FETCHED_PASSWORD_LOGS",
+                        "FETCHED_PASSWORD_TRACKING_LOGS",
                         passwordTrackers,
                         LocalDateTime.now()
                 );
@@ -262,4 +263,28 @@ public class AdminController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @GetMapping("/logs/passwordtracking/{userId}/view")
+    public ResponseEntity<ApiResponse<Page<TrackDto>>> viewPasswordTrackById(@PathVariable long userId,
+                                                                                    Authentication authentication
+            , HttpServletRequest httpServletRequest,
+                                                                                    @PageableDefault(
+                                                                                            page = 0,
+                                                                                            size = 10,
+                                                                                            sort = "passwordChangedAt",
+                                                                                            direction = Sort.Direction.DESC
+                                                                                    )Pageable pageable
+                                                                                    ){
+
+        Page<TrackDto> passwordTrackers=adminService.viewPasswordTrackById(userId,authentication,httpServletRequest,pageable);
+
+        ApiResponse<Page<TrackDto>> apiResponse=
+                new ApiResponse<>(
+                        true,
+                        "FETCHED_PASSWORD_TRACKING_LOGS",
+                        passwordTrackers,
+                        LocalDateTime.now()
+                );
+
+        return ResponseEntity.ok(apiResponse);
+    }
 }

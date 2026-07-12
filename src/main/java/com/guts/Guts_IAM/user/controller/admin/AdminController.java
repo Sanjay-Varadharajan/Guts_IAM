@@ -2,7 +2,6 @@ package com.guts.Guts_IAM.user.controller.admin;
 
 
 import com.guts.Guts_IAM.common.response.ApiResponse;
-import com.guts.Guts_IAM.passwordtracking.PasswordTracker;
 import com.guts.Guts_IAM.passwordtracking.TrackDto;
 import com.guts.Guts_IAM.role.dto.RoleRequestDto;
 import com.guts.Guts_IAM.role.dto.RoleResponseDto;

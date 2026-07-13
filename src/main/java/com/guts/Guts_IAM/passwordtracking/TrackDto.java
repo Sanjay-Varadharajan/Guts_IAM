@@ -15,5 +15,7 @@ public class TrackDto {
 
     private LocalDateTime passwordChangedAt;
 
+    private long totalChanges;
+
     private int userId;
 }

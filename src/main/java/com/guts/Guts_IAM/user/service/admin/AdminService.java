@@ -600,7 +600,6 @@ public class AdminService {
         );
 
         return passwordTrackers.map(this::mapToDto);
-
     }
 
     private TrackDto mapToDto(PasswordTracker tracker) {
@@ -609,6 +608,7 @@ public class AdminService {
 
         dto.setTrackerId(tracker.getTrackerId());
         dto.setPasswordChangedAt(tracker.getPasswordChangedAt());
+        dto.setTotalChanges(tracker.getTotalChanges());
 
         if (tracker.getUser() != null) {
             dto.setUserId(tracker.getUser().getUserId());
@@ -668,5 +668,7 @@ public class AdminService {
 
         return passwordTrackers.map(this::mapToDto);
     }
+
+
 
 }

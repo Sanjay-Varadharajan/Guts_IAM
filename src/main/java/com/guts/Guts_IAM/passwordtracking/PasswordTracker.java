@@ -22,6 +22,7 @@ public class PasswordTracker {
 
     private LocalDateTime passwordChangedAt;
 
+    private long totalChanges;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

@@ -18,6 +18,7 @@ public class PasswordTrackerService{
         PasswordTracker passwordTracker=new PasswordTracker();
         passwordTracker.setChangedPasswordHash(password);
         passwordTracker.setUser(user);
+        passwordTracker.setTotalChanges(passwordTracker.getTotalChanges()+1);
         passwordTracker.setPasswordChangedAt(LocalDateTime.now());
         passwordTrackerRepository.save(passwordTracker);
     }

@@ -1,6 +1,7 @@
 package com.guts.Guts_IAM.user.controller.admin;
 
 
+import com.guts.Guts_IAM.apikey.CreationStat;
 import com.guts.Guts_IAM.common.response.ApiResponse;
 import com.guts.Guts_IAM.passwordtracking.TrackDto;
 import com.guts.Guts_IAM.role.dto.RoleRequestDto;
@@ -283,7 +284,23 @@ public class AdminController {
                         passwordTrackers,
                         LocalDateTime.now()
                 );
+        return ResponseEntity.ok(apiResponse);
+    }
+
+    @GetMapping("/get/key/createdon")
+    public ResponseEntity<ApiResponse<CreationStat>> keyCreatedOn(@RequestParam String apiKey,Authentication authentication,
+                                                                  HttpServletRequest httpServletRequest){
+
+        CreationStat creationStat=adminService.getCreatedOn(apiKey,authentication,httpServletRequest);
+
+        ApiResponse<CreationStat> apiResponse=new ApiResponse<>(
+                true,
+                "FETECHED_KEY_CREATION_DATE",
+                creationStat,
+                LocalDateTime.now()
+        );
 
         return ResponseEntity.ok(apiResponse);
     }
+
 }

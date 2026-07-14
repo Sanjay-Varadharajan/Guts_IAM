@@ -250,6 +250,27 @@
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
 
+            @ExceptionHandler(ApiKeyNotFoundException.class)
+            public ResponseEntity<ApiErrorResponse> handleApiKeyNotFoundException(
+                    HandleMissingParamException ex,
+                    HttpServletRequest request
+            ) {
+
+                Map<String, String> exceptionBody = new HashMap<>();
+                exceptionBody.put("Exception", ex.getClass().getSimpleName());
+
+                ApiErrorResponse response = new ApiErrorResponse(
+                        ex.getMessage(),
+                        HttpStatus.NOT_FOUND ,
+                        "NOT_FOUND",
+                        exceptionBody,
+                        LocalDateTime.now(),
+                        request.getRequestURI()
+                );
+
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+
 
 
         }

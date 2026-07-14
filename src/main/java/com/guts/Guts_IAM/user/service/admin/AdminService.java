@@ -1,11 +1,15 @@
 package com.guts.Guts_IAM.user.service.admin;
 
 
+import com.guts.Guts_IAM.apikey.ApiKey;
+import com.guts.Guts_IAM.apikey.ApikeyRepository;
+import com.guts.Guts_IAM.apikey.CreationStat;
 import com.guts.Guts_IAM.auditlog.action.Action;
 import com.guts.Guts_IAM.auditlog.action.AuditStatus;
 import com.guts.Guts_IAM.auditlog.export.service.DownloadAuditLogService;
 import com.guts.Guts_IAM.auditlog.model.AuditLog;
 import com.guts.Guts_IAM.auditlog.service.AuditLogService;
+import com.guts.Guts_IAM.common.exception.types.ApiKeyNotFoundException;
 import com.guts.Guts_IAM.common.exception.types.ResourceNotFoundException;
 import com.guts.Guts_IAM.common.exception.types.UserNameNotFoundException;
 import com.guts.Guts_IAM.passwordtracking.PasswordTracker;
@@ -15,6 +19,7 @@ import com.guts.Guts_IAM.role.dto.RoleRequestDto;
 import com.guts.Guts_IAM.role.dto.RoleResponseDto;
 import com.guts.Guts_IAM.role.model.Role;
 import com.guts.Guts_IAM.role.repository.RoleRepository;
+import com.guts.Guts_IAM.security.util.hashutil.HashUtil;
 import com.guts.Guts_IAM.user.model.User;
 import com.guts.Guts_IAM.auditlog.repository.AuditRepository;
 import com.guts.Guts_IAM.user.repository.UserRepository;
@@ -25,6 +30,7 @@ import com.guts.Guts_IAM.user.stats.AdminStats;
 import com.guts.Guts_IAM.user.stats.AdminStatsService;
 import com.guts.Guts_IAM.user.stats.UserStatsForAdmin;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.coyote.BadRequestException;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -38,6 +44,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -64,6 +71,7 @@ public class AdminService {
 
     private final PasswordTrackerRepository passwordTrackerRepository;
 
+    private final ApikeyRepository apikeyRepository;
 
     public Page<UserResponseDto> getAllActiveUsers(Authentication authentication, Pageable pageable, HttpServletRequest request) {
 
@@ -670,5 +678,70 @@ public class AdminService {
     }
 
 
+    public CreationStat getCreatedOn(String apiKey, Authentication authentication, HttpServletRequest httpServletRequest) {
 
+        Optional<User> user = userRepository.findByUserMailAndActiveTrue(authentication.getName());
+
+        if (user.isEmpty()) {
+
+            auditLogService.log(
+                    null,
+                    Action.GET_API_KEY_CREATED_ON_STATS,
+                    "API_KEY",
+                    authentication.getName(),
+                    AuditStatus.FAILED,
+                    "authenticated user not found",
+                    httpServletRequest
+            );
+            throw new UserNameNotFoundException(
+                    "user not found",
+                    "NOT_FOUND",
+                    HttpStatus.NOT_FOUND
+            );
+        }
+        if(apiKey==null || apiKey.isBlank()){
+
+            auditLogService.log(
+                    user.get(),
+                    Action.GET_API_KEY_CREATED_ON_STATS,
+                    "API_KEY",
+                    user.get().getUserId().toString(),
+                    AuditStatus.FAILED,
+                    "api key is empty",
+                    httpServletRequest
+            );
+            throw new ApiKeyNotFoundException("Api key is Empty","NOT_FOUND",HttpStatus.NOT_FOUND);
+        }
+
+        String compareHash= HashUtil.sha256(apiKey);
+
+        ApiKey apiKeyEntity=apikeyRepository.findByhashedApiKey(compareHash);
+
+        if (apiKeyEntity==null){
+            auditLogService.log(
+                    user.get(),
+                    Action.GET_API_KEY_CREATED_ON_STATS,
+                    "API_KEY",
+                    user.get().getUserId().toString(),
+                    AuditStatus.FAILED,
+                    "api key is not found",
+                    httpServletRequest
+            );
+            throw new ApiKeyNotFoundException("Api key is not found","NOT_FOUND",HttpStatus.NOT_FOUND);
+        }
+
+        CreationStat creationStat=new CreationStat(apiKeyEntity);
+
+        auditLogService.log(
+                user.get(),
+                Action.GET_API_KEY_CREATED_ON_STATS,
+                "API_KEY",
+                user.get().getUserId().toString(),
+                AuditStatus.SUCCESS,
+                "fetched api key CreatedOn stats",
+                httpServletRequest
+        );
+        return creationStat;
+
+    }
 }

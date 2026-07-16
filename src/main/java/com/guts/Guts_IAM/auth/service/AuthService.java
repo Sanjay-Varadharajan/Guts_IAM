@@ -194,6 +194,8 @@ public class AuthService {
             device = "Desktop";
         }
         emailService.LoginMail(user.getUserMail(),user.getUserName(),ip,geo,device,browser,operatingSystem);
+
+
         return new JwtResponse(accessToken, refreshToken.getToken(), "Bearer");
     }
 

@@ -17,5 +17,5 @@ public class TrackDto {
 
     private long totalChanges;
 
-    private int userId;
+    private long userId;
 }

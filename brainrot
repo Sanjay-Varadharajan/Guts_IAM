@@ -140,4 +140,6 @@ jwt have ->header,payload,signature
 
 Show API key creation date.
 
-contine with secuirty stats service
+continue with secuirty stats service
+
+review the security stats service before moving on to next

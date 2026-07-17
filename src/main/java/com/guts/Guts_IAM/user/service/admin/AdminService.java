@@ -6,9 +6,11 @@ import com.guts.Guts_IAM.apikey.ApikeyRepository;
 import com.guts.Guts_IAM.apikey.CreationStat;
 import com.guts.Guts_IAM.auditlog.action.Action;
 import com.guts.Guts_IAM.auditlog.action.AuditStatus;
+import com.guts.Guts_IAM.auditlog.dto.SecurityStats;
 import com.guts.Guts_IAM.auditlog.export.service.DownloadAuditLogService;
 import com.guts.Guts_IAM.auditlog.model.AuditLog;
 import com.guts.Guts_IAM.auditlog.service.AuditLogService;
+import com.guts.Guts_IAM.auditlog.service.SecurityStatsService;
 import com.guts.Guts_IAM.common.exception.types.ApiKeyNotFoundException;
 import com.guts.Guts_IAM.common.exception.types.ResourceNotFoundException;
 import com.guts.Guts_IAM.common.exception.types.UserNameNotFoundException;
@@ -72,6 +74,8 @@ public class AdminService {
     private final PasswordTrackerRepository passwordTrackerRepository;
 
     private final ApikeyRepository apikeyRepository;
+
+    private final SecurityStatsService securityStatsService;
 
     public Page<UserResponseDto> getAllActiveUsers(Authentication authentication, Pageable pageable, HttpServletRequest request) {
 
@@ -742,6 +746,11 @@ public class AdminService {
                 httpServletRequest
         );
         return creationStat;
+
+    }
+
+    public SecurityStats getSecurityStats(Authentication authentication, HttpServletRequest httpServletRequest, String userMail) {
+        return securityStatsService.getStats(authentication,httpServletRequest,userMail);
 
     }
 }

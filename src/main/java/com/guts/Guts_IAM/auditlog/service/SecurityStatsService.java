@@ -1,13 +1,10 @@
 package com.guts.Guts_IAM.auditlog.service;
 
 
-import com.guts.Guts_IAM.apikey.ApiKey;
 import com.guts.Guts_IAM.apikey.ApikeyRepository;
-import com.guts.Guts_IAM.apikey.Status;
 import com.guts.Guts_IAM.auditlog.action.Action;
 import com.guts.Guts_IAM.auditlog.action.AuditStatus;
-import com.guts.Guts_IAM.auditlog.model.SecurityStats;
-import com.guts.Guts_IAM.auth.service.AuthService;
+import com.guts.Guts_IAM.auditlog.dto.SecurityStats;
 import com.guts.Guts_IAM.common.exception.types.UserNameNotFoundException;
 import com.guts.Guts_IAM.passwordtracking.PasswordTracker;
 import com.guts.Guts_IAM.passwordtracking.PasswordTrackerRepository;
@@ -16,7 +13,6 @@ import com.guts.Guts_IAM.sessionmanagement.repository.UserSessionRepository;
 import com.guts.Guts_IAM.user.model.User;
 import com.guts.Guts_IAM.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
-import jdk.jfr.Registered;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -32,7 +28,6 @@ public class SecurityStatsService {
 
 
     private final UserRepository userRepository;
-    private final AuthService authService;
     private final AuditLogService auditLogService;
     private final UserSessionRepository userSessionRepository;
     private final ApikeyRepository apikeyRepository;

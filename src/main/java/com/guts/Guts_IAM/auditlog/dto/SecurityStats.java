@@ -1,6 +1,5 @@
-package com.guts.Guts_IAM.auditlog.model;
+package com.guts.Guts_IAM.auditlog.dto;
 
-import com.guts.Guts_IAM.user.model.User;
 import lombok.Getter;
 import lombok.Setter;
 

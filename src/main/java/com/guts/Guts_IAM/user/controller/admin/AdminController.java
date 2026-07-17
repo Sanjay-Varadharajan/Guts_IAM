@@ -2,6 +2,7 @@ package com.guts.Guts_IAM.user.controller.admin;
 
 
 import com.guts.Guts_IAM.apikey.CreationStat;
+import com.guts.Guts_IAM.auditlog.dto.SecurityStats;
 import com.guts.Guts_IAM.common.response.ApiResponse;
 import com.guts.Guts_IAM.passwordtracking.TrackDto;
 import com.guts.Guts_IAM.role.dto.RoleRequestDto;
@@ -239,7 +240,7 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/logs/passwordtracking/all")
+    @GetMapping("/logs/passwordTracking/all")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Page<TrackDto>>> allPasswordChange(Authentication authentication
                                                                                 , HttpServletRequest httpServletRequest,
@@ -263,7 +264,8 @@ public class AdminController {
         return ResponseEntity.ok(apiResponse);
     }
 
-    @GetMapping("/logs/passwordtracking/{userId}/view")
+    @GetMapping("/logs/passwordTracking/{userId}/view")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Page<TrackDto>>> viewPasswordTrackById(@PathVariable long userId,
                                                                                     Authentication authentication
             , HttpServletRequest httpServletRequest,
@@ -287,15 +289,16 @@ public class AdminController {
         return ResponseEntity.ok(apiResponse);
     }
 
-    @GetMapping("/get/key/createdon")
+    @GetMapping("/get/key/createOn")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<CreationStat>> keyCreatedOn(@RequestParam String apiKey,Authentication authentication,
-                                                                  HttpServletRequest httpServletRequest){
+                                                                  HttpServletRequest httpServletRequest) {
 
-        CreationStat creationStat=adminService.getCreatedOn(apiKey,authentication,httpServletRequest);
+        CreationStat creationStat = adminService.getCreatedOn(apiKey, authentication, httpServletRequest);
 
-        ApiResponse<CreationStat> apiResponse=new ApiResponse<>(
+        ApiResponse<CreationStat> apiResponse = new ApiResponse<>(
                 true,
-                "FETECHED_KEY_CREATION_DATE",
+                "FETCHED_KEY_CREATION_DATE",
                 creationStat,
                 LocalDateTime.now()
         );
@@ -303,5 +306,20 @@ public class AdminController {
         return ResponseEntity.ok(apiResponse);
     }
 
+    @GetMapping("/security/stats/view")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<SecurityStats>> getSecurityStats(Authentication authentication,HttpServletRequest httpServletRequest,
+    @RequestParam String userMail){
 
+        SecurityStats securityStats=adminService.getSecurityStats(authentication,httpServletRequest,userMail);
+
+        ApiResponse<SecurityStats> securityStatsApiResponse=new ApiResponse<>(
+                true,
+                "FETCHED_SECURITY_STATS",
+                securityStats,
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.ok(securityStatsApiResponse);
+    }
 }

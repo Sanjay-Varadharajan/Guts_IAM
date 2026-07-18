@@ -71,14 +71,24 @@ public class SecurityStatsService {
                 LocalDateTime.now()
         );
         long totalApiKeys=apikeyRepository.countByUserId(user1.getUserId());
-        PasswordTracker lastPasswordChanged=passwordTrackerRepository.findTopByUserUserIdOrderByPasswordChangedAtDesc(user1.getUserId());
-
         stats.setLastLogin(session.getLoginTime());
         stats.setActiveSessions(activeSession);
         stats.setAccountAgeDays(accountAge);
         stats.setTotalApiKeys(totalApiKeys);
         stats.setFailedLoginAttempts(user1.getFailedAttempts());
-        stats.setLastPasswordChange(lastPasswordChanged.getPasswordChangedAt());
+
+        PasswordTracker passwordTracker =
+                passwordTrackerRepository.findTopByUserUserIdOrderByPasswordChangedAtDesc(user1.getUserId());
+
+        LocalDateTime lastPasswordChangedAt = null;
+
+        if (passwordTracker != null) {
+            lastPasswordChangedAt = passwordTracker.getPasswordChangedAt();
+        }
+
+        stats.setLastPasswordChange(lastPasswordChangedAt);
+
+
 
         return stats;
 

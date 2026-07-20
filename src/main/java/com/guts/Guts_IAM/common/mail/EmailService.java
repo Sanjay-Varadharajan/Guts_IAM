@@ -25,11 +25,11 @@ public class EmailService {
     private String supportEmail;
 
     @Async
-    public void sendOtp(String toEmail,String otp){
-        SimpleMailMessage simpleMailMessage=new SimpleMailMessage();
+    public void sendOtp(String toEmail, String otp) {
+        SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
         simpleMailMessage.setTo(toEmail);
         simpleMailMessage.setSubject("Guts_IAM ,Password Reset OTP");
-        simpleMailMessage.setText("your otp is: "+otp+" (Valid for 5 minutes)");
+        simpleMailMessage.setText("your otp is: " + otp + " (Valid for 5 minutes)");
         javaMailSender.send(simpleMailMessage);
     }
 
@@ -78,41 +78,41 @@ public class EmailService {
         mail.setTo(toEmail);
         mail.setSubject("Guts_IAM - Login Successful");
         String message = """
-Hello, %s,
-
-We noticed a successful sign-in to your Guts IAM account.
-
-========================================
-       LOGIN SECURITY NOTIFICATION
-========================================
-
-Login Details
-----------------------------------------
-Time             : %s
-IP Address       : %s
-Location         : %s, %s
-Device           : %s
-Browser          : %s
-Operating System : %s
-
-----------------------------------------
-
-If you recognize this activity, no further action is required.
-
-If you did NOT sign in, your account may be at risk.
-Please change your password immediately and review your recent account activity.
-
-Need help?
-Contact your administrator or the Guts IAM support team immediately.
-IAM Support: %s
-Email       : %s
-
-Thank you for choosing Guts IAM.
-
-Best regards,
-
-Guts IAM Security Team
-""".formatted(
+                Hello, %s,
+                
+                We noticed a successful sign-in to your Guts IAM account.
+                
+                ========================================
+                       LOGIN SECURITY NOTIFICATION
+                ========================================
+                
+                Login Details
+                ----------------------------------------
+                Time             : %s
+                IP Address       : %s
+                Location         : %s, %s
+                Device           : %s
+                Browser          : %s
+                Operating System : %s
+                
+                ----------------------------------------
+                
+                If you recognize this activity, no further action is required.
+                
+                If you did NOT sign in, your account may be at risk.
+                Please change your password immediately and review your recent account activity.
+                
+                Need help?
+                Contact your administrator or the Guts IAM support team immediately.
+                IAM Support: %s
+                Email       : %s
+                
+                Thank you for choosing Guts IAM.
+                
+                Best regards,
+                
+                Guts IAM Security Team
+                """.formatted(
                 userName,
                 LocalDateTime.now(),
                 ipAddress,
@@ -130,7 +130,49 @@ Guts IAM Security Team
         javaMailSender.send(mail);
     }
 
+    public void apiKeyMail(String toEmail, String userName, String ipAddress, GeoLocation location) {
+        SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
+        simpleMailMessage.setSubject("Guts_IAM - New API Key Created");
+        String message = """
+                Hello %s,
+                
+                           A new API key has been created for your Guts_IAM account.
+                
+                           Details:
+                           --------------------------------
+                           Username : %s
+                           Created From IP : %s
+                           Location : %s
+                           Time : %s
+                           --------------------------------
+                
+                           If you created this API key, no action is required.
+                
+                           If you did not create this API key, please revoke it immediately\s
+                           and review your account security.
+                
+                           Note:
+                           For security reasons, the API key is not included in this email.
+                
+                                          Need help?
+                           Contact your administrator or the Guts IAM support team immediately.
+                          IAM Support: %s
+                          Email       : %s
+                
+                
+                           Stay secure,
+                           Guts_IAM Security Team
+                """.formatted(
+                userName,
+                userName,
+                ipAddress,
+                location != null ? location.getCity() + ", " + location.getCountry() : "Unknown",
+                LocalDateTime.now(),
+                supportPhone,
+                supportEmail
+        );
+
+        simpleMailMessage.setText(message);
+        javaMailSender.send(simpleMailMessage);
     }
-
-
-
+}

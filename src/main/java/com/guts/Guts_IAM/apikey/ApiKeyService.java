@@ -6,6 +6,9 @@ import com.guts.Guts_IAM.auditlog.action.AuditStatus;
 import com.guts.Guts_IAM.auditlog.service.AuditLogService;
 import com.guts.Guts_IAM.common.exception.types.HandleMissingParamException;
 import com.guts.Guts_IAM.common.exception.types.UserNameNotFoundException;
+import com.guts.Guts_IAM.common.mail.EmailService;
+import com.guts.Guts_IAM.geolocation.dto.GeoLocation;
+import com.guts.Guts_IAM.geolocation.service.GeoIPService;
 import com.guts.Guts_IAM.security.util.hashutil.HashUtil;
 import com.guts.Guts_IAM.user.model.User;
 import com.guts.Guts_IAM.user.repository.UserRepository;
@@ -29,6 +32,10 @@ public class ApiKeyService {
     private final ApikeyRepository apikeyRepository;
 
     private final UserRepository userRepository;
+
+    private final EmailService emailService;
+
+    private final GeoIPService geoIPService;
 
     private static final String PREFIX = "api_key:";
 
@@ -78,7 +85,10 @@ public class ApiKeyService {
                                 httpServletRequest
                         );
 
+                        String ip=auditLogService.extractIp(httpServletRequest);
+                        GeoLocation geo = geoIPService.getLocation(ip);
 
+                        emailService.apiKeyMail(user.getUserMail(),user.getUserName(),ip,geo);
 
                         return apiKey;
                     }

@@ -1,10 +1,10 @@
 package com.guts.Guts_IAM.user.controller.admin;
 
 
-import com.guts.Guts_IAM.apikey.CreationStat;
+import com.guts.Guts_IAM.apikey.dto.CreationStat;
 import com.guts.Guts_IAM.auditlog.dto.SecurityStats;
 import com.guts.Guts_IAM.common.response.ApiResponse;
-import com.guts.Guts_IAM.passwordtracking.TrackDto;
+import com.guts.Guts_IAM.passwordtracking.dto.TrackDto;
 import com.guts.Guts_IAM.role.dto.RoleRequestDto;
 import com.guts.Guts_IAM.role.dto.RoleResponseDto;
 import com.guts.Guts_IAM.user.dto.admin.AdminRequestDto;

@@ -2,7 +2,7 @@
     
     
     import com.fasterxml.jackson.annotation.JsonIgnore;
-    import com.guts.Guts_IAM.passwordtracking.PasswordTracker;
+    import com.guts.Guts_IAM.passwordtracking.model.PasswordTracker;
     import com.guts.Guts_IAM.role.model.Role;
     import jakarta.persistence.*;
     import jakarta.validation.constraints.Email;

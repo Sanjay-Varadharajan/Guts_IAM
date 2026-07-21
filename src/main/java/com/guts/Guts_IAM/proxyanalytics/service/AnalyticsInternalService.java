@@ -1,4 +1,4 @@
-package com.guts.Guts_IAM.proxyanalytics;
+package com.guts.Guts_IAM.proxyanalytics.service;
 
 
 import com.guts.Guts_IAM.auditlog.action.Action;
@@ -6,10 +6,10 @@ import com.guts.Guts_IAM.auditlog.action.AuditStatus;
 import com.guts.Guts_IAM.auditlog.service.AuditLogService;
 import com.guts.Guts_IAM.common.exception.types.ApiKeyNotFoundException;
 import com.guts.Guts_IAM.common.exception.types.UserNameNotFoundException;
+import com.guts.Guts_IAM.proxyanalytics.dto.ApiKeyAnalyticsDto;
 import com.guts.Guts_IAM.user.model.User;
 import com.guts.Guts_IAM.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;

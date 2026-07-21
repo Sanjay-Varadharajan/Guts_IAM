@@ -1,8 +1,8 @@
-package com.guts.Guts_IAM.passwordtracking;
+package com.guts.Guts_IAM.passwordtracking.service;
 
-import com.guts.Guts_IAM.security.util.hashutil.HashUtil;
+import com.guts.Guts_IAM.passwordtracking.repo.PasswordTrackerRepository;
+import com.guts.Guts_IAM.passwordtracking.model.PasswordTracker;
 import com.guts.Guts_IAM.user.model.User;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

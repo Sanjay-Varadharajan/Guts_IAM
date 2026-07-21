@@ -1,8 +1,11 @@
-package com.guts.Guts_IAM.apikey;
+package com.guts.Guts_IAM.apikey.dto;
+
+import com.guts.Guts_IAM.apikey.model.ApiKey;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 
-
+@Data
 public class CreationStat {
 
     private String apiKey;

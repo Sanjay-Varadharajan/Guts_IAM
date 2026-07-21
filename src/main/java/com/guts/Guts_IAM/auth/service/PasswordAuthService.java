@@ -10,7 +10,7 @@ import com.guts.Guts_IAM.auth.dto.ResetPasswordRequest;
 import com.guts.Guts_IAM.common.exception.types.TokenNotFoundException;
 import com.guts.Guts_IAM.common.exception.types.UserNameNotFoundException;
 import com.guts.Guts_IAM.common.mail.EmailService;
-import com.guts.Guts_IAM.passwordtracking.PasswordTrackerService;
+import com.guts.Guts_IAM.passwordtracking.service.PasswordTrackerService;
 import com.guts.Guts_IAM.user.model.User;
 import com.guts.Guts_IAM.user.repository.UserRepository;
 import com.guts.Guts_IAM.common.util.OtpUtil;

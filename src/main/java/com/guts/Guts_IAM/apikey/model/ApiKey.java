@@ -1,6 +1,7 @@
-package com.guts.Guts_IAM.apikey;
+package com.guts.Guts_IAM.apikey.model;
 
 
+import com.guts.Guts_IAM.apikey.status.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

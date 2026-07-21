@@ -1,4 +1,4 @@
-package com.guts.Guts_IAM.passwordtracking;
+package com.guts.Guts_IAM.passwordtracking.model;
 
 import com.guts.Guts_IAM.user.model.User;
 import jakarta.persistence.*;

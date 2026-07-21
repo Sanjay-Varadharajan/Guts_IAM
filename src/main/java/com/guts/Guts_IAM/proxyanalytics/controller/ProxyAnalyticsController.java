@@ -1,6 +1,8 @@
-package com.guts.Guts_IAM.proxyanalytics;
+package com.guts.Guts_IAM.proxyanalytics.controller;
 
 import com.guts.Guts_IAM.common.response.ApiResponse;
+import com.guts.Guts_IAM.proxyanalytics.dto.ApiKeyAnalyticsDto;
+import com.guts.Guts_IAM.proxyanalytics.service.AnalyticsInternalService;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +26,7 @@ public class ProxyAnalyticsController {
     @GetMapping("/analytics/requests")
     @PreAuthorize("hasRole('ADMIN')")
     public   ResponseEntity<ApiResponse<ApiKeyAnalyticsDto>> proxyAnalytics(@RequestParam String apiKey, Authentication authentication,
-                                                                HttpServletRequest httpServletRequest){
+                                                                            HttpServletRequest httpServletRequest){
 
 
         ApiKeyAnalyticsDto apiKeyAnalyticsDto=analyticsInternalService.proxyAnalytics(apiKey,authentication,httpServletRequest);

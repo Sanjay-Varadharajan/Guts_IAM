@@ -1,4 +1,4 @@
-package com.guts.Guts_IAM.proxyanalytics;
+package com.guts.Guts_IAM.proxyanalytics.dto;
 
 import lombok.Data;
 

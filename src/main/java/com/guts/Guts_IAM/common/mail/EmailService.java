@@ -132,6 +132,7 @@ public class EmailService {
 
     public void apiKeyMail(String toEmail, String userName, String ipAddress, GeoLocation location) {
         SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
+        simpleMailMessage.setTo(toEmail);
         simpleMailMessage.setSubject("Guts_IAM - New API Key Created");
         String message = """
                 Hello %s,

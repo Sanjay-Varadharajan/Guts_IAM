@@ -88,7 +88,7 @@ public class ApiKeyService {
                         String ip=auditLogService.extractIp(httpServletRequest);
                         GeoLocation geo = geoIPService.getLocation(ip);
 
-                        emailService.apiKeyMail(user.getUserMail(),user.getUserName(),ip,geo);
+                        emailService.apiKeyMail(owner,user.getUserName(),ip,geo);
 
                         return apiKey;
                     }

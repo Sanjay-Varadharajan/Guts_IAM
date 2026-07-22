@@ -130,6 +130,7 @@ public class EmailService {
         javaMailSender.send(mail);
     }
 
+    @Async
     public void apiKeyMail(String toEmail, String userName, String ipAddress, GeoLocation location) {
         SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
         simpleMailMessage.setTo(toEmail);
@@ -175,5 +176,73 @@ public class EmailService {
 
         simpleMailMessage.setText(message);
         javaMailSender.send(simpleMailMessage);
+    }
+
+    public void passwordChangeMail(String toEmail, String userName, String ipAddress, GeoLocation location, String device, String browser, String operatingSystem) {
+
+        SimpleMailMessage mail = new SimpleMailMessage();
+
+        mail.setTo(toEmail);
+        mail.setSubject("Guts IAM Security Alert - Password Changed");
+        String message = """
+                Hello, %s,
+                
+                Your account password was changed successfully.
+             
+                
+                ========================================
+                 PASSWORD CHANGE SECURITY NOTIFICATION
+                ========================================
+                
+                Password Change Details
+                ----------------------------------------
+                Time             : %s
+                IP Address       : %s
+                Location         : %s, %s
+                Device           : %s
+                Browser          : %s
+                Operating System : %s
+                
+                ----------------------------------------
+                
+                If you recognize this activity, no further action is required.
+                
+                
+                If you did NOT make this change, your account may have been compromised.
+          
+                We recommend that you:
+                • Reset your password immediately.
+                • Review your recent account activity.
+                • Contact your administrator if you need assistance.
+                
+                
+                Need help?
+                Contact your administrator or the Guts IAM support team immediately.
+                IAM Support: %s
+                Email       : %s
+                
+                Thank you for choosing Guts IAM.
+                
+                Best regards,
+                
+                Guts IAM Security Team
+                
+                Note: This is an automated security notification. Please do not reply to this email.
+                """.formatted(
+                userName,
+                LocalDateTime.now(),
+                ipAddress,
+                location.getCity(),
+                location.getCountry(),
+                device,
+                browser,
+                operatingSystem,
+                supportPhone,
+                supportEmail
+        );
+
+        mail.setText(message);
+
+        javaMailSender.send(mail);
     }
 }

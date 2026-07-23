@@ -10,12 +10,16 @@ import com.guts.Guts_IAM.auth.dto.ResetPasswordRequest;
 import com.guts.Guts_IAM.common.exception.types.TokenNotFoundException;
 import com.guts.Guts_IAM.common.exception.types.UserNameNotFoundException;
 import com.guts.Guts_IAM.common.mail.EmailService;
+import com.guts.Guts_IAM.geolocation.dto.GeoLocation;
+import com.guts.Guts_IAM.geolocation.service.GeoIPService;
 import com.guts.Guts_IAM.passwordtracking.service.PasswordTrackerService;
 import com.guts.Guts_IAM.user.model.User;
 import com.guts.Guts_IAM.user.repository.UserRepository;
 import com.guts.Guts_IAM.common.util.OtpUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import nl.basjes.parse.useragent.UserAgent;
+import nl.basjes.parse.useragent.UserAgentAnalyzer;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,6 +39,8 @@ public class PasswordAuthService {
     private final AuditLogService auditLogService;
     private final PasswordTrackerService passwordTrackerService;
     private static final int OTP_LENGTH = 6;
+    private final GeoIPService geoIPService;
+    private final UserAgentAnalyzer userAgentAnalyzer;
 
 
     public void forgotPassword(ForgotPasswordRequest req, HttpServletRequest httpServletRequest) {
@@ -223,6 +229,33 @@ public class PasswordAuthService {
         );
 
         passwordTrackerService.trackChange(encodedPassword,user);
+
+        String ip=auditLogService.extractIp(httpServletRequest);
+        GeoLocation geo = geoIPService.getLocation(ip);
+        String userAgentString =
+                httpServletRequest.getHeader("User-Agent");
+
+
+
+        UserAgent agent =
+                userAgentAnalyzer.parse(userAgentString);
+
+        String browser =
+                agent.getValue("AgentName");
+        String operatingSystem =
+                agent.getValue("OperatingSystemName");
+
+
+        String device;
+
+        if (userAgentString.contains("Mobile")) {
+            device = "Mobile";
+        } else if (userAgentString.contains("Tablet")) {
+            device = "Tablet";
+        } else {
+            device = "Desktop";
+        }
+        emailService.passwordChangeMail(user.getUserMail(),user.getUserName(),ip,geo,device,browser,operatingSystem);
         otpRepository.deleteById(req.email());
     }
 }

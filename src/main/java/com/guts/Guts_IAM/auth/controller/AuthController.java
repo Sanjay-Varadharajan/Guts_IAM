@@ -24,8 +24,6 @@
         private final AuthService authService;
 
 
-
-
         @PostMapping("/login")
         public ResponseEntity<?> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletRequest httpServletRequest){
             return ResponseEntity.ok(authService.login(loginRequest,httpServletRequest));

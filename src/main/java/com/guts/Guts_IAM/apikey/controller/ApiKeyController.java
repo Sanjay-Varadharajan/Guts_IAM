@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -33,9 +34,10 @@ public class ApiKeyController {
     @DeleteMapping("/revoke")
     public ResponseEntity<String> revoke(
             @RequestParam  String apiKey,
-            HttpServletRequest httpServletRequest
+            HttpServletRequest httpServletRequest,
+            Authentication authentication
     ) {
-        apiKeyService.revokeApiKey(apiKey,httpServletRequest);
+        apiKeyService.revokeApiKey(apiKey,httpServletRequest,authentication);
         return ResponseEntity.ok("API key revoked");
     }
 

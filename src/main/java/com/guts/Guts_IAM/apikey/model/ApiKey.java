@@ -28,7 +28,7 @@ public class ApiKey {
     private String hashedApiKey;
 
 
-    private long userId;
+    private Integer userId;
 
     private Status keyStatus=Status.ACTIVE;
 

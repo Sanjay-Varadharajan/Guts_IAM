@@ -245,4 +245,52 @@ public class EmailService {
 
         javaMailSender.send(mail);
     }
-}
+
+    public void apiKeyRevokeMail(String toEmail,String userName,String ipAddress,GeoLocation geoLocation,String device,String browser,String operatingSystem,LocalDateTime revokedTime){
+        SimpleMailMessage simpleMailMessage=new SimpleMailMessage();
+        simpleMailMessage.setTo(toEmail);
+        String message= """
+            Hello, %s,
+
+            An API key associated with your account has been revoked successfully.
+
+            ========================================
+                     API KEY REVOCATION DETAILS
+            ========================================
+          
+                Revoked Time     : %s
+                IP Address       : %s
+                Location         : %s, %s
+                Device           : %s
+                Browser          : %s
+                Operating System : %s
+
+            This API key is no longer valid and can no longer be used to access protected APIs.
+
+            If you performed this action, no further action is required.
+
+            If you did NOT revoke this API key, we recommend that you:
+            • Review your account activity.
+            • Regenerate any affected API keys.
+            • Change your account password immediately.
+            • Contact your administrator if you suspect unauthorized access.
+
+            Thank you,
+            Guts_IAM Security Team
+
+            This is an automated security notification. Please do not reply to this email.
+            """.formatted(
+                userName,
+                revokedTime,
+                ipAddress,
+                geoLocation.getCity(),
+                geoLocation.getCountry(),
+                device,
+                browser,
+                operatingSystem
+        );
+
+        simpleMailMessage.setText(message);
+        javaMailSender.send(simpleMailMessage);
+    }
+    }

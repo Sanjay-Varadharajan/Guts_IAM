@@ -242,6 +242,7 @@ public class ApiKeyService {
 
         emailService.apiKeyRevokeMail(apiKeyOwner.getUserMail(),apiKeyOwner.getUserName(),ip,geo,device,browser,operatingSystem, LocalDateTime.now());
 
+        System.out.print(apiKeyOwner.getUserMail());
         auditLogService.log(
                 user.get(),
                 Action.REVOKE_API_KEY,

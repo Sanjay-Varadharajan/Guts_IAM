@@ -249,6 +249,8 @@ public class EmailService {
     public void apiKeyRevokeMail(String toEmail,String userName,String ipAddress,GeoLocation geoLocation,String device,String browser,String operatingSystem,LocalDateTime revokedTime){
         SimpleMailMessage simpleMailMessage=new SimpleMailMessage();
         simpleMailMessage.setTo(toEmail);
+        simpleMailMessage.setSubject("Guts IAM  - API Key Revoked");
+
         String message= """
             Hello, %s,
 
@@ -291,6 +293,7 @@ public class EmailService {
         );
 
         simpleMailMessage.setText(message);
+
         javaMailSender.send(simpleMailMessage);
     }
     }

@@ -178,6 +178,7 @@ public class EmailService {
         javaMailSender.send(simpleMailMessage);
     }
 
+    @Async
     public void passwordChangeMail(String toEmail, String userName, String ipAddress, GeoLocation location, String device, String browser, String operatingSystem) {
 
         SimpleMailMessage mail = new SimpleMailMessage();
@@ -246,6 +247,7 @@ public class EmailService {
         javaMailSender.send(mail);
     }
 
+    @Async
     public void apiKeyRevokeMail(String toEmail,String userName,String ipAddress,GeoLocation geoLocation,String device,String browser,String operatingSystem,LocalDateTime revokedTime){
         SimpleMailMessage simpleMailMessage=new SimpleMailMessage();
         simpleMailMessage.setTo(toEmail);

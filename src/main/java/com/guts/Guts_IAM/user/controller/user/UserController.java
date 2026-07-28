@@ -150,4 +150,18 @@ public class UserController {
 
         return ResponseEntity.ok(apiResponse);
     }
+
+    @DeleteMapping("/apiKey/revoke")
+    public ResponseEntity<ApiResponse<Void>>  revokeApiKey(@RequestParam String apiKey,Authentication authentication,HttpServletRequest httpServletRequest){
+        userService.revokeApiKey(apiKey,authentication,httpServletRequest);
+
+        ApiResponse<Void> apiResponse=new ApiResponse<>(
+                true,
+                "API_KEY_REVOKED",
+                null,
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.ok(apiResponse);
+    }
 }

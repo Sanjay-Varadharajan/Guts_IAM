@@ -148,3 +148,8 @@ review the security stats service before moving on to next
 wireout the emailservice tonight
 
 api for revoke apikey on own
+
+
+dont forget to change the link of signup while switching from aws to localhost
+
+implement passwordhistory tracking

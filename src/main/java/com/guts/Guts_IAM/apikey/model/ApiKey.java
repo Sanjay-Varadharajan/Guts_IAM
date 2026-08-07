@@ -27,11 +27,9 @@ public class ApiKey {
 
     private String hashedApiKey;
 
-
     private Integer userId;
 
     private Status keyStatus=Status.ACTIVE;
-
 
     private LocalDateTime lastUsedAt;
 

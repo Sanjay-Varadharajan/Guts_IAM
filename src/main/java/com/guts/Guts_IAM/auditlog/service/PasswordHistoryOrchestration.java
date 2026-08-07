@@ -13,7 +13,6 @@ public class PasswordHistoryOrchestration {
     private final PasswordHistoryRepository passwordHistoryRepository;
 
     public void addHistory(Integer userId,String hashedPassword){
-
         PasswordHistory passwordHistory=new PasswordHistory();
         passwordHistory.setHashedPassword(hashedPassword);
         passwordHistory.setUserId(userId);

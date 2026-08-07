@@ -6,6 +6,7 @@ import com.guts.Guts_IAM.auditlog.model.AuditLog;
 import com.guts.Guts_IAM.auditlog.repository.AuditRepository;
 import com.guts.Guts_IAM.auditlog.service.AuditLogService;
 import com.guts.Guts_IAM.auditlog.service.AuditService;
+import com.guts.Guts_IAM.auditlog.service.PasswordHistoryOrchestration;
 import com.guts.Guts_IAM.auth.dto.PendingSignUp;
 import com.guts.Guts_IAM.auth.dto.SignupRequest;
 import com.guts.Guts_IAM.auth.properties.PasswordValidationResult;
@@ -47,6 +48,7 @@ public class SignupService {
 
     private final AdminStatsService adminStatsService;
 
+    private final PasswordHistoryOrchestration passwordHistoryOrchestration;
 
 
     private final RoleRepository roleRepository;
@@ -171,15 +173,10 @@ public class SignupService {
     ) {
 
 
-
         PendingSignUp pendingSignup =
                 (PendingSignUp) redisTemplate
                         .opsForValue()
                         .get("signup:" + token);
-
-
-
-
 
 
         if (pendingSignup == null) {
@@ -199,7 +196,6 @@ public class SignupService {
                     HttpStatus.BAD_REQUEST
             );
         }
-
 
         Boolean deleted = redisTemplate.delete("signup:" + token);
 
@@ -291,8 +287,7 @@ public class SignupService {
                 httpServletRequest
         );
 
-
-
+        passwordHistoryOrchestration.addHistory(user.getUserId(),bCryptPasswordEncoder.encode(user.getUserPassword()));
 
         return new ApiResponse(
                 true,

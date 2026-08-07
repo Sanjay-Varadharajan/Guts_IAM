@@ -3,6 +3,7 @@ package com.guts.Guts_IAM.auth.service;
 import com.guts.Guts_IAM.auditlog.action.Action;
 import com.guts.Guts_IAM.auditlog.action.AuditStatus;
 import com.guts.Guts_IAM.auditlog.service.AuditLogService;
+import com.guts.Guts_IAM.auditlog.service.PasswordHistoryOrchestration;
 import com.guts.Guts_IAM.auth.dto.ForgotPasswordRequest;
 import com.guts.Guts_IAM.auth.model.PasswordResetOtp;
 import com.guts.Guts_IAM.auth.repository.PasswordResetOtpRepository;
@@ -21,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import nl.basjes.parse.useragent.UserAgent;
 import nl.basjes.parse.useragent.UserAgentAnalyzer;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,7 +43,8 @@ public class PasswordAuthService {
     private static final int OTP_LENGTH = 6;
     private final GeoIPService geoIPService;
     private final UserAgentAnalyzer userAgentAnalyzer;
-
+    private final PasswordHistoryOrchestration passwordHistoryOrchestration;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     public void forgotPassword(ForgotPasswordRequest req, HttpServletRequest httpServletRequest) {
 
@@ -255,6 +258,8 @@ public class PasswordAuthService {
         } else {
             device = "Desktop";
         }
+
+        passwordHistoryOrchestration.addHistory(user.getUserId(),bCryptPasswordEncoder.encode(user.getUserPassword()));
         emailService.passwordChangeMail(user.getUserMail(),user.getUserName(),ip,geo,device,browser,operatingSystem);
         otpRepository.deleteById(req.email());
     }

@@ -32,6 +32,7 @@ import com.guts.Guts_IAM.user.stats.AdminStats;
 import com.guts.Guts_IAM.user.stats.AdminStatsService;
 import com.guts.Guts_IAM.user.stats.UserStatsForAdmin;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -46,8 +47,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -749,4 +752,100 @@ public class AdminService {
         return securityStatsService.getStats(authentication,httpServletRequest,userMail);
 
     }
+
+    public UserResponseDto filterUser(Authentication authentication, HttpServletRequest httpServletRequest, @NotNull String userMail) {
+        Optional<User> user = userRepository.findByUserMailAndActiveTrue(authentication.getName());
+
+        if (user.isEmpty()) {
+
+            auditLogService.log(
+                    null,
+                    Action.FILTER_USER,
+                    "USERS",
+                    authentication.getName(),
+                    AuditStatus.FAILED,
+                    "authenticated user not found",
+                    httpServletRequest
+            );
+            throw new UserNameNotFoundException(
+                    "user not found",
+                    "NOT_FOUND",
+                    HttpStatus.NOT_FOUND
+            );
+        }
+
+        if(userMail==null || userMail.isBlank()){
+
+            auditLogService.log(
+                    user.get(),
+                    Action.FILTER_USER,
+                    "USERS",
+                    user.get().getUserId().toString(),
+                    AuditStatus.FAILED,
+                    "user mail is empty",
+                    httpServletRequest
+            );
+            throw new ApiKeyNotFoundException("search field is Empty","NOT_FOUND",HttpStatus.NOT_FOUND);
+        }
+
+        Optional<User> userResponseDto=userRepository.findByUserMail(userMail);
+
+
+        UserResponseDto userResponse=new UserResponseDto(userResponseDto.get());
+
+        auditLogService.log(
+                user.get(),
+                Action.FILTER_USER,
+                "USERS",
+                user.get().getUserId().toString(),
+                AuditStatus.SUCCESS,
+                "search successful",
+                httpServletRequest
+        );
+
+        return userResponse;
+    }
+
+    public Page<UserResponseDto> filterUserOnRole(Authentication authentication, HttpServletRequest httpServletRequest, String userRole, Pageable pageable) {
+        Optional<User> user = userRepository.findByUserMailAndActiveTrue(authentication.getName());
+
+        if (user.isEmpty()) {
+
+            auditLogService.log(
+                    null,
+                    Action.FILTER_USER_ROLE,
+                    "USERS",
+                    authentication.getName(),
+                    AuditStatus.FAILED,
+                    "authenticated user not found",
+                    httpServletRequest
+            );
+            throw new UserNameNotFoundException(
+                    "user not found",
+                    "NOT_FOUND",
+                    HttpStatus.NOT_FOUND
+            );
+        }
+
+        Page<User> users=userRepository.findByRoles_Name(userRole,pageable);
+
+        return users.map(this::mapToUserDto);
+    }
+
+    private UserResponseDto mapToUserDto(User user) {
+        UserResponseDto userResponseDto=new UserResponseDto();
+
+        userResponseDto.setUserId(user.getUserId());
+        userResponseDto.setUserName(user.getUserName());
+        userResponseDto.setUserMail(user.getUserMail());
+        userResponseDto.setUserCreatedOn(user.getUserCreatedOn());
+        userResponseDto.setActive(user.isActive());
+        userResponseDto.setAccountNonLocked(user.isAccountNonLocked());
+        userResponseDto.setEmailVerified(user.isEmailVerified());
+        userResponseDto.setRoles(user.getRoles().stream().map(
+                role -> role.getName()).collect(Collectors.toSet())
+        );
+        return userResponseDto;
+    }
+
 }

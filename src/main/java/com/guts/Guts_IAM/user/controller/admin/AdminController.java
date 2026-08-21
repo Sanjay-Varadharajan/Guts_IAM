@@ -11,10 +11,13 @@ import com.guts.Guts_IAM.user.dto.admin.AdminRequestDto;
 import com.guts.Guts_IAM.auditlog.dto.AuditLogDto;
 import com.guts.Guts_IAM.user.dto.user.UserResponseDto;
 import com.guts.Guts_IAM.user.export.ProfileExportService;
+import com.guts.Guts_IAM.user.model.User;
 import com.guts.Guts_IAM.user.service.admin.AdminService;
 import com.guts.Guts_IAM.user.stats.UserStatsForAdmin;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -321,5 +324,44 @@ public class AdminController {
         );
 
         return ResponseEntity.ok(securityStatsApiResponse);
+    }
+
+    @GetMapping("/user/filter")
+    public ResponseEntity<ApiResponse<UserResponseDto>> filterUser(Authentication authentication,
+                                                                   HttpServletRequest httpServletRequest,
+                                                                   @RequestParam @NotNull String userMail){
+
+        UserResponseDto responseDto=adminService.filterUser(authentication,httpServletRequest,userMail);
+        ApiResponse<UserResponseDto> apiResponse=new ApiResponse<>(
+                true,
+                "user returned",
+                responseDto,
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.ok(apiResponse);
+    }
+    @GetMapping("user/filter/roles")
+    public ResponseEntity<ApiResponse<Page<UserResponseDto>>> filterUserOnRoles(Authentication authentication,
+                                                                          HttpServletRequest httpServletRequest,
+                                                                          @PageableDefault(
+                                                                                  page = 0,
+                                                                                  size = 10,
+                                                                                  sort = "userMail",
+                                                                                  direction = Sort.Direction.ASC
+                                                                          )Pageable pageable,
+                                                                          @RequestParam String userRole) {
+
+        Page<UserResponseDto> userResponseDtoPage =
+                adminService.filterUserOnRole(authentication, httpServletRequest, userRole, pageable);
+
+        ApiResponse<Page<UserResponseDto>> pageApiResponse = new ApiResponse<>(
+                true,
+                "USER_FILTERED_ON_ROLE",
+                userResponseDtoPage,
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.ok(pageApiResponse);
     }
 }

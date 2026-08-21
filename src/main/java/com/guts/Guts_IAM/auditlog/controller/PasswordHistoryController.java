@@ -46,9 +46,5 @@ public class PasswordHistoryController {
 
         return ResponseEntity.ok(apiResponse);
 
-
-
-
-
     }
 }
